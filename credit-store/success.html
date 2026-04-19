@@ -46,6 +46,22 @@
       Back to Store
     </button>
   </div>
+<h2 id="key-box">Generating your key...</h2>
 
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const credits = params.get("credits");
+
+  fetch(`/get-key?credits=${credits}`)
+    .then(res => res.json())
+    .then(data => {
+      document.getElementById("key-box").innerText =
+        `🎁 Your Key: ${data.key} (${data.credits} credits)`;
+    })
+    .catch(() => {
+      document.getElementById("key-box").innerText =
+        "Error generating key";
+    });
+</script>
 </body>
 </html>

@@ -1,3 +1,6 @@
+function generateKey() {
+  return "KEY-" + Math.random().toString(36).substring(2, 10).toUpperCase();
+}
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
@@ -28,7 +31,20 @@ app.post("/create-checkout", async (req, res) => {
     if (!priceMap[credits]) {
        return res.status(400).json({ error: "Invalid credit package" });
     }
+app.get("/get-key", (req, res) => {
+  const credits = req.query.credits;
 
+  if (!credits) {
+    return res.status(400).json({ error: "Missing credits" });
+  }
+
+  const key = generateKey();
+
+  // later you will store this in a database
+  console.log(`Generated key ${key} for ${credits} credits`);
+
+  res.json({ key, credits });
+});
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       mode: "payment",
@@ -44,7 +60,7 @@ app.post("/create-checkout", async (req, res) => {
           quantity: 1
         }
       ],
-      success_url: "https://stripe-backend-1-65oj.onrender.com/success.html",
+      success_url: "https://stripe-backend-1-65oj.onrender.com/success.html?credits=${credits}",
       cancel_url: "https://stripe-backend-1-65oj.onrender.com/cancel"
     });
 
