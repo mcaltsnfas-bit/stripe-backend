@@ -154,3 +154,22 @@ app.get("/success", (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
+
+async function startServer() {
+  try {
+    await client.connect();
+    db = client.db("creditstore");
+    keysCollection = db.collection("keys");
+
+    console.log("MongoDB connected 🚀");
+
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+
+  } catch (err) {
+    console.log("MongoDB connection error:", err);
+  }
+}
+
+startServer();
