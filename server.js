@@ -44,7 +44,7 @@ app.post("/create-checkout", async (req, res) => {
           quantity: 1
         }
       ],
-      success_url: "https://stripe-backend-1-65oj.onrender.com/success",
+      success_url: "https://stripe-backend-1-65oj.onrender.com/success.html",
       cancel_url: "https://stripe-backend-1-65oj.onrender.com/cancel"
     });
 
