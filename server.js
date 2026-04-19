@@ -36,8 +36,8 @@ app.post("/create-checkout", async (req, res) => {
           quantity: 1
         }
       ],
-      success_url: "https://stripe-backend-lzb5.onrender.com/success",
-      cancel_url: "https://stripe-backend-lzb5.onrender.com/cancel"
+      success_url: "https://stripe-backend-1-65oj.onrender.com/success",
+      cancel_url: "https://stripe-backend-1-65oj.onrender.com/cancel"
     });
 
     return res.json({ url: session.url });
