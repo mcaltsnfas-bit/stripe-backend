@@ -1,3 +1,15 @@
+const fs = require("fs");
+const path = require("path");
+
+const keysFile = path.join(__dirname, "keys.json");
+
+function loadKeys() {
+  return JSON.parse(fs.readFileSync(keysFile, "utf8"));
+}
+
+function saveKeys(data) {
+  fs.writeFileSync(keysFile, JSON.stringify(data, null, 2));
+}
 function generateKey() {
   return "KEY-" + Math.random().toString(36).substring(2, 10).toUpperCase();
 }
@@ -40,10 +52,40 @@ app.get("/get-key", (req, res) => {
 
   const key = generateKey();
 
-  // later you will store this in a database
-  console.log(`Generated key ${key} for ${credits} credits`);
+  const keys = loadKeys();
+
+  keys.push({
+    key: key,
+    credits: credits,
+    used: false
+  });
+
+  saveKeys(keys);
 
   res.json({ key, credits });
+});
+app.post("/redeem", (req, res) => {
+  const { key } = req.body;
+
+  const keys = loadKeys();
+
+  const found = keys.find(k => k.key === key);
+
+  if (!found) {
+    return res.status(400).json({ error: "Invalid key" });
+  }
+
+  if (found.used) {
+    return res.status(400).json({ error: "Key already used" });
+  }
+
+  found.used = true;
+  saveKeys(keys);
+
+  res.json({
+    success: true,
+    credits: found.credits
+  });
 });
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
