@@ -4,7 +4,11 @@ const path = require("path");
 const keysFile = path.join(__dirname, "keys.json");
 
 function loadKeys() {
-  return JSON.parse(fs.readFileSync(keysFile, "utf8"));
+  try {
+    return JSON.parse(fs.readFileSync(keysFile, "utf8"));
+  } catch (err) {
+    return [];
+  }
 }
 
 function saveKeys(data) {
@@ -78,6 +82,8 @@ app.get("/get-key", (req, res) => {
   const credits = req.query.credits;
   const secret = req.query.secret;
 
+  console.log("Generating key for:", credits);
+
   if (secret !== "MY_SECRET_CODE_123") {
     return res.status(403).json({ error: "Unauthorized" });
   }
@@ -97,6 +103,8 @@ app.get("/get-key", (req, res) => {
   });
 
   saveKeys(keys);
+
+  console.log("Keys saved:", keys);
 
   res.json({ key, credits });
 });
