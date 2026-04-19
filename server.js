@@ -16,10 +16,18 @@ app.post("/create-checkout", async (req, res) => {
     const { credits } = req.body;
 
     const priceMap = {
-      100: 100,
-      500: 450,
-      1000: 850
+       100: 100,
+        200: 180,
+       300: 270,
+       400: 360,
+       500: 450,
+        750: 650,
+       1000: 800
     };
+
+    if (!priceMap[credits]) {
+       return res.status(400).json({ error: "Invalid credit package" });
+    }
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
