@@ -1,19 +1,4 @@
-const fs = require("fs");
-const path = require("path");
-
-const keysFile = path.join(__dirname, "keys.json");
-
-function loadKeys() {
-  try {
-    return JSON.parse(fs.readFileSync(keysFile, "utf8"));
-  } catch (err) {
-    return [];
-  }
-}
-
-function saveKeys(data) {
-  fs.writeFileSync(keysFile, JSON.stringify(data, null, 2));
-}
+const { MongoClient } = require("mongodb");
 
 function generateKey() {
   return "KEY-" + Math.random().toString(36).substring(2, 10).toUpperCase();
@@ -30,6 +15,31 @@ const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 app.use(cors());
 app.use(express.json());
 app.use(express.static("credit-store"));
+
+const client = new MongoClient(process.env.MONGO_URI);
+
+let db;
+let keysCollection;
+
+async function connectDB() {
+  try {
+    await client.connect();
+    db = client.db("creditstore");
+    keysCollection = db.collection("keys"); // ✅ correct
+    console.log("MongoDB connected 🚀");
+  } catch (err) {
+    console.log("MongoDB connection error:", err);
+  }
+}
+
+connectDB();
+
+function ensureDB(req, res, next) {
+  if (!keysCollection) {
+    return res.status(500).json({ error: "DB not ready yet" });
+  }
+  next();
+}
 
 /* =======================
    CREATE CHECKOUT
@@ -78,7 +88,7 @@ app.post("/create-checkout", async (req, res) => {
 /* =======================
    GET KEY (FIXED POSITION)
 ======================= */
-app.get("/get-key", (req, res) => {
+app.get("/get-key", ensureDB, async (req, res) => {
   const credits = req.query.credits;
   const secret = req.query.secret;
 
@@ -93,18 +103,15 @@ app.get("/get-key", (req, res) => {
   }
 
   const key = generateKey();
-  const keys = loadKeys();
 
-  keys.push({
+  await keysCollection.insertOne({
     key,
-    credits,
+    credits: Number(credits),
     used: false,
     createdAt: Date.now()
   });
 
-  saveKeys(keys);
-
-  console.log("Keys saved:", keys);
+  console.log("Saved to MongoDB:", key);
 
   res.json({ key, credits });
 });
@@ -112,18 +119,18 @@ app.get("/get-key", (req, res) => {
 /* =======================
    REDEEM
 ======================= */
-app.post("/redeem", (req, res) => {
+app.post("/redeem", ensureDB, async (req, res) => {
   const { key } = req.body;
 
-  const keys = loadKeys();
-
-  const found = keys.find(k => k.key === key);
+  const found = await keysCollection.findOne({ key });
 
   if (!found) return res.status(400).json({ error: "Invalid key" });
   if (found.used) return res.status(400).json({ error: "Key already used" });
 
-  found.used = true;
-  saveKeys(keys);
+  await keysCollection.updateOne(
+    { key },
+    { $set: { used: true } }
+  );
 
   res.json({
     success: true,
