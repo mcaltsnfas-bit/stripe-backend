@@ -1,0 +1,101 @@
+body {
+  margin: 0;
+  font-family: Arial;
+  background: #0f0f14;
+  color: white;
+}
+
+/* NAVBAR */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  padding: 15px 30px;
+  background: #151520;
+  align-items: center;
+}
+
+.logo {
+  font-weight: bold;
+  color: #7c5cff;
+}
+
+.nav-links a {
+  margin: 0 10px;
+  color: white;
+  text-decoration: none;
+  opacity: 0.8;
+}
+
+.nav-links a:hover {
+  opacity: 1;
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+/* HERO */
+.hero {
+  text-align: center;
+  padding: 50px;
+}
+
+.hero h1 {
+  font-size: 40px;
+}
+
+/* SEARCH */
+.search {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.search input {
+  padding: 10px;
+  width: 300px;
+  border-radius: 8px;
+  border: none;
+}
+
+/* PRODUCTS */
+.products {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  padding: 20px;
+}
+
+.card {
+  background: #1a1a25;
+  padding: 20px;
+  border-radius: 15px;
+  width: 200px;
+  text-align: center;
+  transition: 0.3s;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 0 20px #7c5cff55;
+}
+
+.price {
+  color: #7c5cff;
+  font-size: 20px;
+  margin: 10px 0;
+}
+
+button {
+  background: #7c5cff;
+  border: none;
+  padding: 10px;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #6a4df0;
+}

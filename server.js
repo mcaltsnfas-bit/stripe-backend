@@ -9,14 +9,16 @@ const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 app.use(cors());
 app.use(express.json());
 
+app.use(express.static("credit-store"));
+
 app.post("/create-checkout", async (req, res) => {
   try {
     const { credits } = req.body;
 
     const priceMap = {
       100: 100,
-      500: 500,
-      1000: 1000
+      500: 450,
+      1000: 850
     };
 
     const session = await stripe.checkout.sessions.create({
@@ -44,6 +46,9 @@ app.post("/create-checkout", async (req, res) => {
     console.log("❌ Stripe error:", err);   // 👈 ADD THIS
     return res.status(500).json({ error: err.message });
   }
+});
+app.get("/", (req, res) => {
+  res.send("Stripe backend is running 🚀");
 });
 const PORT = process.env.PORT || 3000;
 
