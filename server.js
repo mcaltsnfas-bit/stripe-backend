@@ -45,6 +45,12 @@ app.post("/create-checkout", async (req, res) => {
     }
 app.get("/get-key", (req, res) => {
   const credits = req.query.credits;
+  const secret = req.query.secret;
+
+  // 🔒 simple protection
+  if (secret !== "MY_SECRET_CODE_123") {
+    return res.status(403).json({ error: "Unauthorized" });
+  }
 
   if (!credits) {
     return res.status(400).json({ error: "Missing credits" });
@@ -53,12 +59,12 @@ app.get("/get-key", (req, res) => {
   const key = generateKey();
   const keys = loadKeys();
 
- keys.push({
-   key: key,
-   credits: credits,
-   used: false,
-   createdAt: Date.now()
- });
+  keys.push({
+    key: key,
+    credits: credits,
+    used: false,
+    createdAt: Date.now()
+  });
 
   saveKeys(keys);
 
