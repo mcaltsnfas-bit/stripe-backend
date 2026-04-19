@@ -1,3 +1,4 @@
+const PORT = process.env.PORT || 3000;
 const { MongoClient } = require("mongodb");
 
 function generateKey() {
@@ -135,8 +136,6 @@ app.get("/", (req, res) => {
 app.get("/success", (req, res) => {
   res.send("Payment successful 🎉");
 });
-
-const PORT = process.env.PORT || 3000;
 
 async function startServer() {
   try {
