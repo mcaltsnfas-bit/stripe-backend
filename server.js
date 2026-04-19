@@ -34,8 +34,8 @@ app.post("/create-checkout", async (req, res) => {
           quantity: 1
         }
       ],
-      success_url: "https://YOUR-FRONTEND-URL/success.html",
-      cancel_url: "https://YOUR-FRONTEND-URL/index.html"
+      success_url: "https://stripe-backend-lzb5.onrender.com/success",
+      cancel_url: "https://stripe-backend-lzb5.onrender.com/cancel"
     });
 
     return res.json({ url: session.url });
@@ -45,6 +45,8 @@ app.post("/create-checkout", async (req, res) => {
     return res.status(500).json({ error: err.message });
   }
 });
-app.listen(3000, () => {
-  console.log("Server running on http://localhost:3000");
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
