@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Payment Successful</title>
+
   <style>
     body {
       font-family: Arial;
@@ -19,6 +20,7 @@
       background: #1c1c1c;
       padding: 40px;
       border-radius: 12px;
+      min-width: 300px;
     }
 
     h1 {
@@ -34,35 +36,48 @@
       font-weight: bold;
       border-radius: 6px;
     }
+
+    #key-box {
+      margin-top: 20px;
+      font-size: 18px;
+      color: #ffffff;
+    }
   </style>
 </head>
+
 <body>
 
   <div class="box">
     <h1>✅ Payment Successful!</h1>
-    <p>Your key will be delivered shortly.</p>
+    <p>Your key has been generated below:</p>
 
-<h2 id="key-box">Generating your key...</h2>
+    <h2 id="key-box">Generating your key...</h2>
 
     <button onclick="window.location.href='/'">
       Back to Store
     </button>
   </div>
 
-<script>
-  const params = new URLSearchParams(window.location.search);
-  const credits = params.get("credits");
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const credits = params.get("credits");
 
-  fetch(`/get-key?credits=${credits}&secret=MY_SECRET_CODE_123`)
-    .then(res => res.json())
-    .then(data => {
-      document.getElementById("key-box").innerText =
-        `🎁 Your Key: ${data.key} (${data.credits} credits)`
-    })
-    .catch(() => {
-      document.getElementById("key-box").innerText =
-        "Error generating key";
-    });
-</script>
+    console.log("Credits from URL:", credits);
+
+    fetch(`/get-key?credits=${credits}&secret=MY_SECRET_CODE_123`)
+      .then(res => res.json())
+      .then(data => {
+        console.log("Backend response:", data);
+
+        document.getElementById("key-box").innerText =
+          `🎁 Your Key: ${data.key} (${data.credits} credits)`;
+      })
+      .catch(err => {
+        console.error(err);
+        document.getElementById("key-box").innerText =
+          "Error generating key";
+      });
+  </script>
+
 </body>
 </html>
