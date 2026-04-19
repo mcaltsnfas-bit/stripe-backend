@@ -21,23 +21,6 @@ const client = new MongoClient(process.env.MONGO_URI);
 let db;
 let keysCollection;
 
-async function connectDB() {
-  try {
-    await client.connect();
-    db = client.db("creditstore");
-    keysCollection = db.collection("keys"); // ✅ correct
-    console.log("MongoDB connected 🚀");
-  } catch (err) {
-    console.log("MongoDB connection error:", err);
-  }
-}
-
-connectDB().then(() => {
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-  });
-});
-
 function ensureDB(req, res, next) {
   if (!keysCollection) {
     return res.status(500).json({ error: "DB not ready yet" });
