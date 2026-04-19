@@ -50,6 +50,9 @@ app.post("/create-checkout", async (req, res) => {
 app.get("/", (req, res) => {
   res.send("Stripe backend is running 🚀");
 });
+app.get("/success", (req, res) => {
+  res.send("Payment successful 🎉");
+});
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
