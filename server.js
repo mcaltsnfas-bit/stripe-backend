@@ -1,14 +1,14 @@
-const PORT = process.env.PORT || 3000;
-const { MongoClient } = require("mongodb");
 
 function generateKey() {
   return "KEY-" + Math.random().toString(36).substring(2, 10).toUpperCase();
 }
-
+const { MongoClient } = require("mongodb");
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-const Stripe = require("stripe");
+const Stripe = require("stripe");#
+
+const PORT = process.env.PORT || 3000;
 
 const app = express();
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
@@ -139,7 +139,13 @@ app.get("/success", (req, res) => {
 
 async function startServer() {
   try {
+    console.log("Starting server...");
+    console.log("MONGO_URI exists:", !!process.env.MONGO_URI);
+    console.log("STRIPE KEY exists:", !!process.env.STRIPE_SECRET_KEY);
+
     await client.connect();
+    console.log("Mongo connected step passed");
+
     db = client.db("creditstore");
     keysCollection = db.collection("keys");
 
@@ -150,7 +156,7 @@ async function startServer() {
     });
 
   } catch (err) {
-    console.log("MongoDB connection error:", err);
+    console.log("❌ STARTUP ERROR:", err);
   }
 }
 
