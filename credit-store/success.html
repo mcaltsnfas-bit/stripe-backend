@@ -69,16 +69,17 @@ if (!credits) {
     "Error: missing credits from URL";
   throw new Error("Missing credits");
 }
-    fetch(`/get-key?credits=${credits}&secret=MY_SECRET_CODE_123`)
+    fetch(`/get-key?credits=${Number(credits)}&secret=MY_SECRET_CODE_123`)
   .then(res => res.json())
   .then(data => {
     console.log("API RESPONSE:", data);
 
-    if (!data.key) {
-      document.getElementById("key-box").innerText =
-        "Error: no key returned";
-      return;
-    }
+    if (!data || !data.key) {
+  console.log("Bad response:", data);
+  document.getElementById("key-box").innerText =
+    "Error generating key (check console)";
+  return;
+}
 
     document.getElementById("key-box").innerText =
       `🎁 Your Key: ${data.key} (${data.credits} credits)`;
