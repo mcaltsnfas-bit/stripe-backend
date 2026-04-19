@@ -51,14 +51,14 @@ app.get("/get-key", (req, res) => {
   }
 
   const key = generateKey();
-
   const keys = loadKeys();
 
-  keys.push({
-    key: key,
-    credits: credits,
-    used: false
-  });
+ keys.push({
+   key: key,
+   credits: credits,
+   used: false,
+   createdAt: Date.now()
+ });
 
   saveKeys(keys);
 
