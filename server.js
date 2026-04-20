@@ -7,18 +7,22 @@ const Stripe = require("stripe");
 
 const app = express();
 
+// ----------------------
+// MIDDLEWARE
+// ----------------------
 app.use(cors());
 app.use(express.json());
 
+// 👇 THIS IS THE FIX FOR YOUR HTML
+app.use(express.static("credit-store"));
+
 // ----------------------
-// ENV SAFETY
+// ENV
 // ----------------------
 const PORT = process.env.PORT || 3000;
-
 const MONGO_URI = process.env.MONGO_URI;
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 
-// Stripe (safe init)
 const stripe = STRIPE_SECRET_KEY ? Stripe(STRIPE_SECRET_KEY) : null;
 
 // ----------------------
@@ -29,7 +33,7 @@ function generateKey() {
 }
 
 // ----------------------
-// MONGO SETUP (SAFE)
+// MONGO
 // ----------------------
 const client = new MongoClient(MONGO_URI || "");
 
@@ -56,14 +60,15 @@ async function connectDB() {
 connectDB();
 
 // ----------------------
-// HEALTH CHECK
+// HOME (your HTML now works instead of text)
 // ----------------------
+// (optional fallback if no index.html exists)
 app.get("/", (req, res) => {
-  res.send("Server running 🚀");
+  res.sendFile(__dirname + "/credit-store/index.html");
 });
 
 // ----------------------
-// DB STATUS
+// STATUS CHECK
 // ----------------------
 app.get("/status", (req, res) => {
   res.json({
@@ -73,7 +78,7 @@ app.get("/status", (req, res) => {
 });
 
 // ----------------------
-// CREATE KEY
+// GET KEY
 // ----------------------
 app.get("/get-key", async (req, res) => {
   try {
@@ -104,6 +109,7 @@ app.get("/get-key", async (req, res) => {
     console.log("Key created:", key);
 
     res.json({ key, credits });
+
   } catch (err) {
     console.log("get-key error:", err);
     res.status(500).json({ error: "Server error" });
@@ -111,7 +117,7 @@ app.get("/get-key", async (req, res) => {
 });
 
 // ----------------------
-// REDEEM KEY
+// REDEEM
 // ----------------------
 app.post("/redeem", async (req, res) => {
   try {
