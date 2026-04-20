@@ -6,18 +6,39 @@ const Stripe = require("stripe");
 
 const app = express();
 
+// --------------------
+// MIDDLEWARE
+// --------------------
 app.use(cors());
 app.use(express.json());
 
+// --------------------
+// ENV
+// --------------------
+const PORT = process.env.PORT || 3000;
+const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
+
+const stripe = STRIPE_SECRET_KEY ? Stripe(STRIPE_SECRET_KEY) : null;
+
+// --------------------
+// TEST ROUTE
+// --------------------
+app.get("/", (req, res) => {
+  res.send("Server running 🚀");
+});
+
+// --------------------
+// STRIPE CHECKOUT
+// --------------------
 app.post("/create-checkout", async (req, res) => {
   try {
-    console.log("Checkout request received:", req.body);
-
-    const { credits } = req.body;
+    console.log("Request received:", req.body);
 
     if (!stripe) {
       return res.status(500).json({ error: "Stripe not configured" });
     }
+
+    const { credits } = req.body;
 
     if (!credits) {
       return res.status(400).json({ error: "Missing credits" });
@@ -48,16 +69,21 @@ app.post("/create-checkout", async (req, res) => {
           quantity: 1
         }
       ],
-      success_url: `https://stripe-backend-1-65oj.onrender.com/success.html?credits=${credits}`,
-      cancel_url: `https://stripe-backend-1-65oj.onrender.com/cancel.html`
+      success_url: "http://localhost:3000/",
+      cancel_url: "http://localhost:3000/"
     });
-
-    console.log("Stripe session created");
 
     res.json({ url: session.url });
 
   } catch (err) {
-    console.log("❌ STRIPE ERROR:", err);
+    console.log("Stripe error:", err);
     res.status(500).json({ error: err.message });
   }
+});
+
+// --------------------
+// START SERVER
+// --------------------
+app.listen(PORT, () => {
+  console.log("SERVER STARTED ON PORT:", PORT);
 });
