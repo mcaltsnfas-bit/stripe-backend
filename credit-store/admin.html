@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Dashboard</title>
+
+  <style>
+    body {
+      font-family: Arial;
+      background: #0f0f0f;
+      color: white;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #00ff88;
+    }
+
+    .key {
+      background: #1c1c1c;
+      padding: 12px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+    }
+
+    .credits {
+      color: #00ff88;
+      font-weight: bold;
+    }
+
+    .used {
+      color: red;
+    }
+
+    .unused {
+      color: #00ff88;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>🔐 Admin Dashboard</h1>
+  <p>All purchased keys:</p>
+
+  <div id="keys">Loading...</div>
+
+  <script>
+    async function loadKeys() {
+      try {
+        const res = await fetch("/admin/keys");
+        const data = await res.json();
+
+        const container = document.getElementById("keys");
+        container.innerHTML = "";
+
+        data.forEach(k => {
+          const div = document.createElement("div");
+          div.className = "key";
+
+          div.innerHTML = `
+            <div>🔑 <b>${k.key}</b></div>
+            <div class="credits">${k.credits} credits</div>
+            <div>Status: <span class="${k.used ? "used" : "unused"}">
+              ${k.used ? "USED" : "NOT USED"}
+            </span></div>
+            <div style="opacity:0.5;font-size:12px">
+              ${new Date(k.createdAt).toLocaleString()}
+            </div>
+          `;
+
+          container.appendChild(div);
+        });
+
+      } catch (err) {
+        document.getElementById("keys").innerText = "Error loading keys";
+        console.error(err);
+      }
+    }
+
+    loadKeys();
+  </script>
+
+</body>
+</html>
