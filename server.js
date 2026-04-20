@@ -6,6 +6,7 @@ const Stripe = require("stripe");
 
 const app = express();
 
+app.use(express.static("credit-store"));
 // --------------------
 // MIDDLEWARE
 // --------------------
@@ -24,7 +25,7 @@ const stripe = STRIPE_SECRET_KEY ? Stripe(STRIPE_SECRET_KEY) : null;
 // TEST ROUTE
 // --------------------
 app.get("/", (req, res) => {
-  res.send("Server running 🚀");
+  res.sendFile(__dirname + "/credit-store/index.html");
 });
 
 // --------------------
