@@ -2,155 +2,62 @@ console.log("BOOTING SERVER...");
 
 const express = require("express");
 const cors = require("cors");
-const { MongoClient } = require("mongodb");
 const Stripe = require("stripe");
 
 const app = express();
 
-// ----------------------
-// MIDDLEWARE
-// ----------------------
 app.use(cors());
 app.use(express.json());
 
-// 👇 THIS IS THE FIX FOR YOUR HTML
-app.use(express.static("credit-store"));
-
-// ----------------------
-// ENV
-// ----------------------
-const PORT = process.env.PORT || 3000;
-const MONGO_URI = process.env.MONGO_URI;
-const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
-
-const stripe = STRIPE_SECRET_KEY ? Stripe(STRIPE_SECRET_KEY) : null;
-
-// ----------------------
-// KEY GENERATOR
-// ----------------------
-function generateKey() {
-  return "KEY-" + Math.random().toString(36).substring(2, 10).toUpperCase();
-}
-
-// ----------------------
-// MONGO
-// ----------------------
-const client = new MongoClient(MONGO_URI || "");
-
-let db;
-let keysCollection;
-
-async function connectDB() {
+app.post("/create-checkout", async (req, res) => {
   try {
-    if (!MONGO_URI) {
-      console.log("⚠️ MONGO_URI missing");
-      return;
-    }
+    console.log("Checkout request received:", req.body);
 
-    await client.connect();
-    db = client.db("creditstore");
-    keysCollection = db.collection("keys");
+    const { credits } = req.body;
 
-    console.log("Mongo connected 🚀");
-  } catch (err) {
-    console.log("Mongo error:", err);
-  }
-}
-
-connectDB();
-
-// ----------------------
-// HOME (your HTML now works instead of text)
-// ----------------------
-// (optional fallback if no index.html exists)
-app.get("/", (req, res) => {
-  res.sendFile(__dirname + "/credit-store/index.html");
-});
-
-// ----------------------
-// STATUS CHECK
-// ----------------------
-app.get("/status", (req, res) => {
-  res.json({
-    mongo: !!keysCollection,
-    stripe: !!stripe
-  });
-});
-
-// ----------------------
-// GET KEY
-// ----------------------
-app.get("/get-key", async (req, res) => {
-  try {
-    if (!keysCollection) {
-      return res.status(500).json({ error: "DB not ready" });
-    }
-
-    const secret = req.query.secret;
-    const credits = req.query.credits;
-
-    if (secret !== "MY_SECRET_CODE_123") {
-      return res.status(403).json({ error: "Unauthorized" });
+    if (!stripe) {
+      return res.status(500).json({ error: "Stripe not configured" });
     }
 
     if (!credits) {
       return res.status(400).json({ error: "Missing credits" });
     }
 
-    const key = generateKey();
+    const priceMap = {
+      100: 100,
+      200: 180,
+      300: 270,
+      400: 360,
+      500: 450,
+      750: 650,
+      1000: 800
+    };
 
-    await keysCollection.insertOne({
-      key,
-      credits: Number(credits),
-      used: false,
-      createdAt: Date.now()
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      mode: "payment",
+      line_items: [
+        {
+          price_data: {
+            currency: "gbp",
+            product_data: {
+              name: `${credits} Credits`
+            },
+            unit_amount: priceMap[credits]
+          },
+          quantity: 1
+        }
+      ],
+      success_url: `https://stripe-backend-1-65oj.onrender.com/success.html?credits=${credits}`,
+      cancel_url: `https://stripe-backend-1-65oj.onrender.com/cancel.html`
     });
 
-    console.log("Key created:", key);
+    console.log("Stripe session created");
 
-    res.json({ key, credits });
-
-  } catch (err) {
-    console.log("get-key error:", err);
-    res.status(500).json({ error: "Server error" });
-  }
-});
-
-// ----------------------
-// REDEEM
-// ----------------------
-app.post("/redeem", async (req, res) => {
-  try {
-    if (!keysCollection) {
-      return res.status(500).json({ error: "DB not ready" });
-    }
-
-    const { key } = req.body;
-
-    const found = await keysCollection.findOne({ key });
-
-    if (!found) return res.status(400).json({ error: "Invalid key" });
-    if (found.used) return res.status(400).json({ error: "Key already used" });
-
-    await keysCollection.updateOne(
-      { key },
-      { $set: { used: true } }
-    );
-
-    res.json({
-      success: true,
-      credits: found.credits
-    });
+    res.json({ url: session.url });
 
   } catch (err) {
-    console.log("redeem error:", err);
-    res.status(500).json({ error: "Server error" });
+    console.log("❌ STRIPE ERROR:", err);
+    res.status(500).json({ error: err.message });
   }
-});
-
-// ----------------------
-// START SERVER
-// ----------------------
-app.listen(PORT, () => {
-  console.log("SERVER STARTED ON PORT:", PORT);
 });
