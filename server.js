@@ -60,6 +60,7 @@ function generateKey() {
   return "KEY-" + Math.random().toString(36).substring(2, 10).toUpperCase();
 }
 
+app.get("/admin/keys", async (req, res) => {
 // --------------------
 // HOME
 // --------------------
