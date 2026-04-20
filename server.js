@@ -8,8 +8,6 @@ const express = require("express");
 const cors = require("cors");
 const Stripe = require("stripe");#
 
-const PORT = process.env.PORT || 3000;
-
 const app = express();
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -137,7 +135,9 @@ app.get("/success", (req, res) => {
   res.send("Payment successful 🎉");
 });
 
-async function startServer() {
+const PORT = process.env.PORT || 3000;
+
+async function startServer() { 
   try {
     console.log("Starting server...");
     console.log("MONGO_URI exists:", !!process.env.MONGO_URI);
