@@ -70,8 +70,8 @@ app.post("/create-checkout", async (req, res) => {
           quantity: 1
         }
       ],
-      success_url: "http://localhost:3000/",
-      cancel_url: "http://localhost:3000/"
+      success_url: "https://stripe-backend-1-65oj.onrender.com/success.html?session_id={CHECKOUT_SESSION_ID}",
+      cancel_url: "https://stripe-backend-1-65oj.onrender.com/cancel.html"
     });
 
     res.json({ url: session.url });
