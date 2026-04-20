@@ -69,7 +69,7 @@ if (!credits) {
     "Error: missing credits from URL";
   throw new Error("Missing credits");
 }
-    fetch(`/get-key?credits=${Number(credits)}&secret=MY_SECRET_CODE_123`)
+    fetch(`/get-key-by-session?session_id=${session_id}`)
   .then(res => res.json())
   .then(data => {
     console.log("API RESPONSE:", data);
