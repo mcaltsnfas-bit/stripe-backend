@@ -8,7 +8,7 @@ const Stripe = require("stripe");
 const app = express();
 
 // --------------------
-// STRIPE WEBHOOK RAW BODY (MUST BE FIRST)
+// WEBHOOK RAW BODY
 // --------------------
 app.use("/webhook", express.raw({ type: "application/json" }));
 
@@ -34,23 +34,18 @@ const stripe = STRIPE_SECRET_KEY ? Stripe(STRIPE_SECRET_KEY) : null;
 // --------------------
 const client = new MongoClient(MONGO_URI || "");
 
-let db;
 let keysCollection;
 
 async function connectDB() {
   try {
-    if (!MONGO_URI) return console.log("⚠️ MONGO_URI missing");
-
     await client.connect();
-    db = client.db("creditstore");
+    const db = client.db("creditstore");
     keysCollection = db.collection("keys");
-
     console.log("Mongo connected 🚀");
   } catch (err) {
     console.log("Mongo error:", err);
   }
 }
-
 connectDB();
 
 // --------------------
@@ -60,7 +55,6 @@ function generateKey() {
   return "KEY-" + Math.random().toString(36).substring(2, 10).toUpperCase();
 }
 
-app.get("/admin/keys", async (req, res) => {
 // --------------------
 // HOME
 // --------------------
@@ -73,9 +67,7 @@ app.get("/", (req, res) => {
 // --------------------
 app.post("/create-checkout", async (req, res) => {
   try {
-    if (!stripe) {
-      return res.status(500).json({ error: "Stripe not configured" });
-    }
+    if (!stripe) return res.status(500).json({ error: "Stripe not configured" });
 
     const { credits } = req.body;
 
@@ -104,12 +96,9 @@ app.post("/create-checkout", async (req, res) => {
           quantity: 1
         }
       ],
-
-      // IMPORTANT: correct credits storage
       metadata: {
         credits: String(credits)
       },
-
       success_url:
         "https://stripe-backend-1-65oj.onrender.com/success.html?session_id={CHECKOUT_SESSION_ID}",
       cancel_url:
@@ -129,11 +118,6 @@ app.post("/create-checkout", async (req, res) => {
 app.post("/webhook", async (req, res) => {
   console.log("🔥 WEBHOOK HIT");
 
-  if (!stripe) {
-    console.log("Stripe not configured");
-    return res.status(500).send("Stripe not ready");
-  }
-
   let event;
 
   try {
@@ -144,7 +128,7 @@ app.post("/webhook", async (req, res) => {
     );
   } catch (err) {
     console.log("Webhook error:", err.message);
-    return res.status(400).send(`Webhook Error: ${err.message}`);
+    return res.status(400).send("Webhook Error");
   }
 
   if (event.type === "checkout.session.completed") {
@@ -162,7 +146,7 @@ app.post("/webhook", async (req, res) => {
         createdAt: Date.now()
       });
 
-      console.log("✅ KEY CREATED:", key, "Credits:", credits);
+      console.log("✅ KEY CREATED:", key);
     }
   }
 
@@ -170,37 +154,54 @@ app.post("/webhook", async (req, res) => {
 });
 
 // --------------------
-// GET KEY BY SESSION
+// GET KEY
 // --------------------
 app.get("/get-key-by-session", async (req, res) => {
+  const sessionId = req.query.session_id;
+
+  if (!sessionId) {
+    return res.status(400).json({ error: "Missing session_id" });
+  }
+
+  if (!keysCollection) {
+    return res.status(500).json({ error: "DB not ready" });
+  }
+
+  const record = await keysCollection.findOne({ sessionId });
+
+  if (!record) {
+    return res.status(404).json({ error: "Key not ready yet" });
+  }
+
+  res.json({
+    key: record.key,
+    credits: record.credits
+  });
+});
+
+// --------------------
+// ADMIN KEYS
+// --------------------
+app.get("/admin/keys", async (req, res) => {
   try {
-    const sessionId = req.query.session_id;
-
-    if (!sessionId) {
-      return res.status(400).json({ error: "Missing session_id" });
-    }
-
     if (!keysCollection) {
       return res.status(500).json({ error: "DB not ready" });
     }
 
-    const record = await keysCollection.findOne({ sessionId });
+    const keys = await keysCollection
+      .find({})
+      .sort({ createdAt: -1 })
+      .toArray();
 
-    if (!record) {
-      return res.status(404).json({ error: "Key not ready yet" });
-    }
-
-    res.json({
-      key: record.key,
-      credits: record.credits
-    });
+    res.json(keys);
   } catch (err) {
+    console.log(err);
     res.status(500).json({ error: err.message });
   }
 });
 
 // --------------------
-// START SERVER
+// START
 // --------------------
 app.listen(PORT, () => {
   console.log("SERVER STARTED ON PORT:", PORT);
