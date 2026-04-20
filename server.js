@@ -8,7 +8,7 @@ const Stripe = require("stripe");
 const app = express();
 
 // --------------------
-// STRIPE WEBHOOK NEEDS RAW BODY
+// STRIPE WEBHOOK RAW BODY (MUST BE FIRST)
 // --------------------
 app.use("/webhook", express.raw({ type: "application/json" }));
 
@@ -68,7 +68,7 @@ app.get("/", (req, res) => {
 });
 
 // --------------------
-// STRIPE CHECKOUT
+// CREATE CHECKOUT
 // --------------------
 app.post("/create-checkout", async (req, res) => {
   try {
@@ -103,12 +103,19 @@ app.post("/create-checkout", async (req, res) => {
           quantity: 1
         }
       ],
-      success_url: `https://stripe-backend-1-65oj.onrender.com/success.html?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `https://stripe-backend-1-65oj.onrender.com/cancel.html`
+
+      // IMPORTANT: correct credits storage
+      metadata: {
+        credits: String(credits)
+      },
+
+      success_url:
+        "https://stripe-backend-1-65oj.onrender.com/success.html?session_id={CHECKOUT_SESSION_ID}",
+      cancel_url:
+        "https://stripe-backend-1-65oj.onrender.com/cancel.html"
     });
 
     res.json({ url: session.url });
-
   } catch (err) {
     console.log("Stripe error:", err);
     res.status(500).json({ error: err.message });
@@ -116,9 +123,16 @@ app.post("/create-checkout", async (req, res) => {
 });
 
 // --------------------
-// WEBHOOK (STEP 2 — IMPORTANT)
+// WEBHOOK
 // --------------------
 app.post("/webhook", async (req, res) => {
+  console.log("🔥 WEBHOOK HIT");
+
+  if (!stripe) {
+    console.log("Stripe not configured");
+    return res.status(500).send("Stripe not ready");
+  }
+
   let event;
 
   try {
@@ -136,17 +150,18 @@ app.post("/webhook", async (req, res) => {
     const session = event.data.object;
 
     const key = generateKey();
+    const credits = session.metadata?.credits;
 
     if (keysCollection) {
       await keysCollection.insertOne({
         key,
         sessionId: session.id,
-        credits: session.amount_total / 100,
+        credits: Number(credits),
         used: false,
         createdAt: Date.now()
       });
 
-      console.log("Key created:", key);
+      console.log("✅ KEY CREATED:", key, "Credits:", credits);
     }
   }
 
@@ -164,6 +179,10 @@ app.get("/get-key-by-session", async (req, res) => {
       return res.status(400).json({ error: "Missing session_id" });
     }
 
+    if (!keysCollection) {
+      return res.status(500).json({ error: "DB not ready" });
+    }
+
     const record = await keysCollection.findOne({ sessionId });
 
     if (!record) {
@@ -174,7 +193,6 @@ app.get("/get-key-by-session", async (req, res) => {
       key: record.key,
       credits: record.credits
     });
-
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
