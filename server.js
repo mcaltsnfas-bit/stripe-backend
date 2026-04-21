@@ -165,10 +165,6 @@ app.get("/get-key-by-session", async (req, res) => {
     return res.status(400).json({ error: "Missing session_id" });
   }
 
-  if (!keysCollection) {
-    return res.status(500).json({ error: "DB not ready" });
-  }
-
   const record = await keysCollection.findOne({ sessionId });
 
   if (!record) {
@@ -185,37 +181,50 @@ app.get("/get-key-by-session", async (req, res) => {
 // ADMIN KEYS
 // --------------------
 app.get("/admin/keys", async (req, res) => {
+  const keys = await keysCollection.find({}).sort({ createdAt: -1 }).toArray();
+  res.json(keys);
+});
+
+// --------------------
+// 🔥 ADMIN: GENERATE KEY (FIXED)
+// --------------------
+app.post("/admin/generate-key", async (req, res) => {
   try {
-    if (!keysCollection) {
-      return res.status(500).json({ error: "DB not ready" });
+    const { credits } = req.body;
+
+    if (!credits) {
+      return res.status(400).json({ error: "Missing credits" });
     }
 
-    const keys = await keysCollection
-      .find({})
-      .sort({ createdAt: -1 })
-      .toArray();
+    const key = generateKey();
 
-    res.json(keys);
+    await keysCollection.insertOne({
+      key,
+      credits: Number(credits),
+      used: false,
+      createdAt: Date.now()
+    });
+
+    console.log("🔑 Generated key:", key);
+
+    res.json({
+      success: true,
+      key,
+      credits
+    });
+
   } catch (err) {
-    console.log(err);
-    res.status(500).json({ error: err.message });
+    console.log("Generate key error:", err);
+    res.status(500).json({ error: "Server error" });
   }
 });
 
 // --------------------
-// REDEEM KEY (UPDATED)
+// REDEEM KEY
 // --------------------
 app.post("/redeem", async (req, res) => {
   try {
     const { key, userId } = req.body;
-
-    if (!key || !userId) {
-      return res.status(400).json({ error: "Missing key or userId" });
-    }
-
-    if (!keysCollection || !usersCollection) {
-      return res.status(500).json({ error: "DB not ready" });
-    }
 
     const found = await keysCollection.findOne({ key });
 
@@ -227,13 +236,11 @@ app.post("/redeem", async (req, res) => {
       return res.status(400).json({ error: "Key already used" });
     }
 
-    // mark key used
     await keysCollection.updateOne(
       { key },
       { $set: { used: true } }
     );
 
-    // add credits to user
     await usersCollection.updateOne(
       { userId },
       { $inc: { credits: found.credits } },
@@ -246,35 +253,21 @@ app.post("/redeem", async (req, res) => {
     });
 
   } catch (err) {
-    console.log("Redeem error:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
 
 // --------------------
-// BALANCE ROUTE
+// BALANCE
 // --------------------
 app.get("/balance", async (req, res) => {
-  try {
-    const userId = req.query.userId;
+  const userId = req.query.userId;
 
-    if (!userId) {
-      return res.status(400).json({ error: "Missing userId" });
-    }
+  const user = await usersCollection.findOne({ userId });
 
-    if (!usersCollection) {
-      return res.status(500).json({ error: "DB not ready" });
-    }
-
-    const user = await usersCollection.findOne({ userId });
-
-    res.json({
-      credits: user ? user.credits : 0
-    });
-
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  res.json({
+    credits: user ? user.credits : 0
+  });
 });
 
 // --------------------
