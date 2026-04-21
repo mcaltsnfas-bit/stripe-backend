@@ -201,6 +201,47 @@ app.get("/admin/keys", async (req, res) => {
 });
 
 // --------------------
+// REDEEM KEY (FOR DISCORD BOT)
+// --------------------
+app.post("/redeem", async (req, res) => {
+  try {
+    const { key } = req.body;
+
+    if (!key) {
+      return res.status(400).json({ error: "Missing key" });
+    }
+
+    if (!keysCollection) {
+      return res.status(500).json({ error: "DB not ready" });
+    }
+
+    const found = await keysCollection.findOne({ key });
+
+    if (!found) {
+      return res.status(400).json({ error: "Invalid key" });
+    }
+
+    if (found.used) {
+      return res.status(400).json({ error: "Key already used" });
+    }
+
+    await keysCollection.updateOne(
+      { key },
+      { $set: { used: true } }
+    );
+
+    res.json({
+      success: true,
+      credits: found.credits
+    });
+
+  } catch (err) {
+    console.log("Redeem error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// --------------------
 // START
 // --------------------
 app.listen(PORT, () => {
