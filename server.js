@@ -35,12 +35,14 @@ const stripe = STRIPE_SECRET_KEY ? Stripe(STRIPE_SECRET_KEY) : null;
 const client = new MongoClient(MONGO_URI || "");
 
 let keysCollection;
+let usersCollection;
 
 async function connectDB() {
   try {
     await client.connect();
     const db = client.db("creditstore");
     keysCollection = db.collection("keys");
+    usersCollection = db.collection("users");
     console.log("Mongo connected 🚀");
   } catch (err) {
     console.log("Mongo error:", err);
@@ -201,17 +203,17 @@ app.get("/admin/keys", async (req, res) => {
 });
 
 // --------------------
-// REDEEM KEY (FOR DISCORD BOT)
+// REDEEM KEY (UPDATED)
 // --------------------
 app.post("/redeem", async (req, res) => {
   try {
-    const { key } = req.body;
+    const { key, userId } = req.body;
 
-    if (!key) {
-      return res.status(400).json({ error: "Missing key" });
+    if (!key || !userId) {
+      return res.status(400).json({ error: "Missing key or userId" });
     }
 
-    if (!keysCollection) {
+    if (!keysCollection || !usersCollection) {
       return res.status(500).json({ error: "DB not ready" });
     }
 
@@ -225,9 +227,17 @@ app.post("/redeem", async (req, res) => {
       return res.status(400).json({ error: "Key already used" });
     }
 
+    // mark key used
     await keysCollection.updateOne(
       { key },
       { $set: { used: true } }
+    );
+
+    // add credits to user
+    await usersCollection.updateOne(
+      { userId },
+      { $inc: { credits: found.credits } },
+      { upsert: true }
     );
 
     res.json({
@@ -238,6 +248,32 @@ app.post("/redeem", async (req, res) => {
   } catch (err) {
     console.log("Redeem error:", err);
     res.status(500).json({ error: "Server error" });
+  }
+});
+
+// --------------------
+// BALANCE ROUTE
+// --------------------
+app.get("/balance", async (req, res) => {
+  try {
+    const userId = req.query.userId;
+
+    if (!userId) {
+      return res.status(400).json({ error: "Missing userId" });
+    }
+
+    if (!usersCollection) {
+      return res.status(500).json({ error: "DB not ready" });
+    }
+
+    const user = await usersCollection.findOne({ userId });
+
+    res.json({
+      credits: user ? user.credits : 0
+    });
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
