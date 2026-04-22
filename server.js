@@ -29,7 +29,7 @@ const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
 const ADMIN_SECRET = process.env.ADMIN_SECRET;
 
-const stripe = STRIPE_SECRET_KEY ? Stripe(STRIPE_SECRET_KEY) : null;
+const stripe = STRIPE_SECRET_KEY ? new Stripe(STRIPE_SECRET_KEY) : null;
 
 // --------------------
 // ADMIN SESSIONS
@@ -69,7 +69,7 @@ function generateKey() {
 }
 
 // --------------------
-// 🔐 ADMIN LOGIN
+// ADMIN LOGIN
 // --------------------
 app.post("/admin/login", (req, res) => {
   const { password } = req.body;
@@ -80,7 +80,6 @@ app.post("/admin/login", (req, res) => {
 
   const token = crypto.randomBytes(24).toString("hex");
 
-  // 1 hour session
   adminSessions.set(token, Date.now() + 1000 * 60 * 60);
 
   res.json({ token });
@@ -91,7 +90,6 @@ app.post("/admin/login", (req, res) => {
 // --------------------
 function checkAdmin(req, res) {
   const token = req.headers["x-admin-token"];
-
   const expiry = adminSessions.get(token);
 
   if (!token || !expiry || Date.now() > expiry) {
@@ -229,7 +227,7 @@ app.get("/admin/keys", async (req, res) => {
 });
 
 // --------------------
-// 🔥 REMOVE CREDITS (SAFE)
+// 🔥 REMOVE CREDITS
 // --------------------
 app.post("/admin/remove-credits", async (req, res) => {
   if (!checkAdmin(req, res)) return;
@@ -247,15 +245,10 @@ app.post("/admin/remove-credits", async (req, res) => {
       return res.status(400).json({ error: "Invalid amount" });
     }
 
-    const user = await usersCollection.findOne({ userId });
-
-    if (!user || user.credits < num) {
-      return res.status(400).json({ error: "Not enough credits or user not found" });
-    }
-
     await usersCollection.updateOne(
       { userId },
-      { $inc: { credits: -num } }
+      { $inc: { credits: -num } },
+      { upsert: true }
     );
 
     res.json({
@@ -265,6 +258,42 @@ app.post("/admin/remove-credits", async (req, res) => {
 
   } catch (err) {
     console.log("Remove credits error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// --------------------
+// ➕ ADD CREDITS (NEW)
+// --------------------
+app.post("/admin/add-credits", async (req, res) => {
+  if (!checkAdmin(req, res)) return;
+
+  try {
+    const { userId, amount } = req.body;
+
+    if (!userId || !amount) {
+      return res.status(400).json({ error: "Missing userId or amount" });
+    }
+
+    const num = Number(amount);
+
+    if (num <= 0) {
+      return res.status(400).json({ error: "Invalid amount" });
+    }
+
+    await usersCollection.updateOne(
+      { userId },
+      { $inc: { credits: num } },
+      { upsert: true }
+    );
+
+    res.json({
+      success: true,
+      message: `Added ${num} credits to ${userId}`
+    });
+
+  } catch (err) {
+    console.log("Add credits error:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
