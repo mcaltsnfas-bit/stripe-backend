@@ -24,6 +24,31 @@ const logChannelId = process.env.LOG_CHANNEL_ID;
 const API = "https://stripe-backend-1-65oj.onrender.com";
 
 // --------------------
+// ADMIN TOKEN (SESSION LOGIN)
+// --------------------
+let adminToken = null;
+
+// --------------------
+// LOGIN TO SERVER
+// --------------------
+async function loginAdmin() {
+  const res = await safeFetchJSON(`${API}/admin/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      password: process.env.ADMIN_SECRET
+    })
+  });
+
+  if (res?.token) {
+    adminToken = res.token;
+    console.log("🔐 Admin logged in");
+  } else {
+    console.log("❌ Admin login failed");
+  }
+}
+
+// --------------------
 // MASKING
 // --------------------
 function maskUser(user) {
@@ -117,10 +142,9 @@ const commands = [
     .setName("redeemhistory")
     .setDescription("View redeem history (admin only)")
     .addUserOption(o =>
-      o.setName("user").setDescription("User to check").setRequired(false)
+      o.setName("user").setDescription("User").setRequired(false)
     ),
 
-  // 🔥 NEW COMMAND
   new SlashCommandBuilder()
     .setName("removecredits")
     .setDescription("Remove credits from a user (admin only)")
@@ -156,8 +180,9 @@ const rest = new REST({ version: "10" }).setToken(process.env.DISCORD_TOKEN);
 // --------------------
 // READY
 // --------------------
-client.on("ready", () => {
+client.on("ready", async () => {
   console.log(`🤖 Logged in as ${client.user.tag}`);
+  await loginAdmin(); // IMPORTANT
 });
 
 // --------------------
@@ -226,7 +251,7 @@ client.on("interactionCreate", async (interaction) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-admin-secret": process.env.ADMIN_SECRET
+          "x-admin-token": adminToken
         },
         body: JSON.stringify({ credits })
       });
@@ -253,7 +278,7 @@ client.on("interactionCreate", async (interaction) => {
 
       const data = await safeFetchJSON(url, {
         headers: {
-          "x-admin-secret": process.env.ADMIN_SECRET
+          "x-admin-token": adminToken
         }
       });
 
@@ -276,7 +301,7 @@ client.on("interactionCreate", async (interaction) => {
     }
 
     // --------------------
-    // ❌ /removecredits (NEW)
+    // /removecredits
     // --------------------
     if (interaction.commandName === "removecredits") {
       if (!interaction.memberPermissions?.has(PermissionsBitField.Flags.Administrator)) {
@@ -290,7 +315,7 @@ client.on("interactionCreate", async (interaction) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-admin-secret": process.env.ADMIN_SECRET
+          "x-admin-token": adminToken
         },
         body: JSON.stringify({
           userId: user.id,

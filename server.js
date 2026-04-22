@@ -62,6 +62,13 @@ async function connectDB() {
 connectDB();
 
 // --------------------
+// KEY GEN
+// --------------------
+function generateKey() {
+  return "KEY-" + Math.random().toString(36).substring(2, 10).toUpperCase();
+}
+
+// --------------------
 // 🔐 ADMIN LOGIN
 // --------------------
 app.post("/admin/login", (req, res) => {
@@ -72,13 +79,15 @@ app.post("/admin/login", (req, res) => {
   }
 
   const token = crypto.randomBytes(24).toString("hex");
+
+  // 1 hour session
   adminSessions.set(token, Date.now() + 1000 * 60 * 60);
 
   res.json({ token });
 });
 
 // --------------------
-// CHECK ADMIN TOKEN
+// CHECK ADMIN
 // --------------------
 function checkAdmin(req, res) {
   const token = req.headers["x-admin-token"];
@@ -94,13 +103,6 @@ function checkAdmin(req, res) {
 }
 
 // --------------------
-// KEY GENERATOR
-// --------------------
-function generateKey() {
-  return "KEY-" + Math.random().toString(36).substring(2, 10).toUpperCase();
-}
-
-// --------------------
 // HOME
 // --------------------
 app.get("/", (req, res) => {
@@ -108,7 +110,7 @@ app.get("/", (req, res) => {
 });
 
 // --------------------
-// CREATE CHECKOUT
+// STRIPE CHECKOUT
 // --------------------
 app.post("/create-checkout", async (req, res) => {
   try {
@@ -144,10 +146,8 @@ app.post("/create-checkout", async (req, res) => {
       metadata: {
         credits: String(credits)
       },
-      success_url:
-        "https://stripe-backend-1-65oj.onrender.com/success.html?session_id={CHECKOUT_SESSION_ID}",
-      cancel_url:
-        "https://stripe-backend-1-65oj.onrender.com/cancel.html"
+      success_url: "https://stripe-backend-1-65oj.onrender.com/success.html",
+      cancel_url: "https://stripe-backend-1-65oj.onrender.com/cancel.html"
     });
 
     res.json({ url: session.url });
@@ -187,14 +187,14 @@ app.post("/webhook", async (req, res) => {
       createdAt: Date.now()
     });
 
-    console.log("✅ KEY CREATED:", key);
+    console.log("KEY CREATED:", key);
   }
 
   res.json({ received: true });
 });
 
 // --------------------
-// 🔑 ADMIN: GENERATE KEY
+// ADMIN: GENERATE KEY
 // --------------------
 app.post("/admin/generate-key", async (req, res) => {
   if (!checkAdmin(req, res)) return;
@@ -214,7 +214,7 @@ app.post("/admin/generate-key", async (req, res) => {
 });
 
 // --------------------
-// 🔐 ADMIN: GET KEYS
+// ADMIN: GET KEYS
 // --------------------
 app.get("/admin/keys", async (req, res) => {
   if (!checkAdmin(req, res)) return;
@@ -229,7 +229,7 @@ app.get("/admin/keys", async (req, res) => {
 });
 
 // --------------------
-// 🔐 SAFE ADMIN: REMOVE CREDITS (FIXED)
+// 🔥 REMOVE CREDITS (SAFE)
 // --------------------
 app.post("/admin/remove-credits", async (req, res) => {
   if (!checkAdmin(req, res)) return;
@@ -250,9 +250,7 @@ app.post("/admin/remove-credits", async (req, res) => {
     const user = await usersCollection.findOne({ userId });
 
     if (!user || user.credits < num) {
-      return res.status(400).json({
-        error: "Not enough credits or user not found"
-      });
+      return res.status(400).json({ error: "Not enough credits or user not found" });
     }
 
     await usersCollection.updateOne(
@@ -272,7 +270,7 @@ app.post("/admin/remove-credits", async (req, res) => {
 });
 
 // --------------------
-// REDEEM KEY
+// REDEEM
 // --------------------
 app.post("/redeem", async (req, res) => {
   const { key, userId } = req.body;
@@ -301,25 +299,6 @@ app.post("/redeem", async (req, res) => {
   });
 
   res.json({ success: true, credits: found.credits });
-});
-
-// --------------------
-// ADMIN HISTORY
-// --------------------
-app.get("/admin/redeem-history", async (req, res) => {
-  if (!checkAdmin(req, res)) return;
-
-  const userId = req.query.userId;
-
-  const query = userId ? { userId } : {};
-
-  const history = await historyCollection
-    .find(query)
-    .sort({ createdAt: -1 })
-    .limit(20)
-    .toArray();
-
-  res.json(history);
 });
 
 // --------------------
