@@ -21,6 +21,7 @@ const client = new Client({
 // CONFIG
 // --------------------
 const logChannelId = process.env.LOG_CHANNEL_ID;
+const API = "https://stripe-backend-1-65oj.onrender.com";
 
 // --------------------
 // MASKING
@@ -30,10 +31,15 @@ function maskUser(user) {
   return name.slice(0, 3) + "***";
 }
 
+function maskKey(key) {
+  if (!key) return "INVALID";
+  return key.slice(0, 4) + "****" + key.slice(-2);
+}
+
 // --------------------
 // SAFE FETCH
 // --------------------
-async function safeFetchJSON(url, options) {
+async function safeFetchJSON(url, options = {}) {
   try {
     const res = await fetch(url, options);
     const text = await res.text();
@@ -51,7 +57,7 @@ async function safeFetchJSON(url, options) {
 }
 
 // --------------------
-// LOGS
+// LOG EMBED
 // --------------------
 async function logRedeem(data) {
   try {
@@ -65,7 +71,8 @@ async function logRedeem(data) {
       .setColor(0x2ecc71)
       .addFields(
         { name: "User", value: maskUser(data.user), inline: true },
-        { name: "Credits", value: `${data.credits}`, inline: true }
+        { name: "Credits", value: `${data.credits}`, inline: true },
+        { name: "Key", value: maskKey(data.key), inline: false }
       )
       .setTimestamp();
 
@@ -99,7 +106,12 @@ const commands = [
 
   new SlashCommandBuilder()
     .setName("redeemhistory")
-    .setDescription("View your recent redeems")
+    .setDescription("View redeem history (admin only)")
+    .addUserOption(o =>
+      o.setName("user")
+        .setDescription("User to check")
+        .setRequired(false)
+    )
 ].map(c => c.toJSON());
 
 // --------------------
@@ -140,38 +152,22 @@ client.on("interactionCreate", async (interaction) => {
 
     const key = interaction.options.getString("key");
 
-    const data = await safeFetchJSON(
-      "https://stripe-backend-1-65oj.onrender.com/redeem",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          key,
-          userId: interaction.user.id
-        })
-      }
-    );
+    const data = await safeFetchJSON(`${API}/redeem`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        key,
+        userId: interaction.user.id
+      })
+    });
 
     if (!data) return interaction.editReply("❌ Server error");
 
     if (data.success) {
-      // send to backend history
-      await safeFetchJSON(
-        "https://stripe-backend-1-65oj.onrender.com/log-redeem",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            userId: interaction.user.id,
-            credits: data.credits,
-            key
-          })
-        }
-      );
-
       await logRedeem({
         user: interaction.user,
-        credits: data.credits
+        credits: data.credits,
+        key
       });
 
       return interaction.editReply(`✅ You got ${data.credits} credits`);
@@ -187,7 +183,7 @@ client.on("interactionCreate", async (interaction) => {
     await interaction.deferReply({ ephemeral: true });
 
     const data = await safeFetchJSON(
-      `https://stripe-backend-1-65oj.onrender.com/balance?userId=${interaction.user.id}`
+      `${API}/balance?userId=${interaction.user.id}`
     );
 
     if (!data) return interaction.editReply("❌ Server error");
@@ -207,14 +203,14 @@ client.on("interactionCreate", async (interaction) => {
 
     const credits = interaction.options.getInteger("credits");
 
-    const data = await safeFetchJSON(
-      "https://stripe-backend-1-65oj.onrender.com/admin/generate-key",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ credits })
-      }
-    );
+    const data = await safeFetchJSON(`${API}/admin/generate-key`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-admin-secret": process.env.ADMIN_SECRET // 🔒 FIXED
+      },
+      body: JSON.stringify({ credits })
+    });
 
     if (!data) return interaction.editReply("❌ Server error");
 
@@ -227,11 +223,24 @@ client.on("interactionCreate", async (interaction) => {
   if (interaction.commandName === "redeemhistory") {
     await interaction.deferReply({ ephemeral: true });
 
-    const data = await safeFetchJSON(
-      `https://stripe-backend-1-65oj.onrender.com/history?userId=${interaction.user.id}`
-    );
+    if (!interaction.memberPermissions?.has(PermissionsBitField.Flags.Administrator)) {
+      return interaction.editReply("❌ No permission");
+    }
 
-    if (!data || !data.history) {
+    const targetUser = interaction.options.getUser("user");
+    const userId = targetUser ? targetUser.id : null;
+
+    const url = userId
+      ? `${API}/admin/redeem-history?userId=${userId}`
+      : `${API}/admin/redeem-history`;
+
+    const data = await safeFetchJSON(url, {
+      headers: {
+        "x-admin-secret": process.env.ADMIN_SECRET // 🔒 FIXED
+      }
+    });
+
+    if (!data || data.length === 0) {
       return interaction.editReply("❌ No history found");
     }
 
@@ -239,10 +248,10 @@ client.on("interactionCreate", async (interaction) => {
       .setTitle("📜 Redeem History")
       .setColor(0x3498db);
 
-    data.history.slice(0, 5).forEach((h, i) => {
+    data.slice(0, 10).forEach((h, i) => {
       embed.addFields({
         name: `#${i + 1}`,
-        value: `💰 ${h.credits} credits\n🔑 ${h.key}`
+        value: `👤 <@${h.userId}>\n💰 ${h.credits} credits\n🔑 ${maskKey(h.key)}`
       });
     });
 

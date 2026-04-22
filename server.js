@@ -26,6 +26,7 @@ const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI;
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
+const ADMIN_SECRET = process.env.ADMIN_SECRET; // 🔒 IMPORTANT
 
 const stripe = STRIPE_SECRET_KEY ? Stripe(STRIPE_SECRET_KEY) : null;
 
@@ -36,7 +37,7 @@ const client = new MongoClient(MONGO_URI || "");
 
 let keysCollection;
 let usersCollection;
-let historyCollection; // NEW
+let historyCollection;
 
 async function connectDB() {
   try {
@@ -45,7 +46,7 @@ async function connectDB() {
 
     keysCollection = db.collection("keys");
     usersCollection = db.collection("users");
-    historyCollection = db.collection("history"); // NEW
+    historyCollection = db.collection("history");
 
     console.log("Mongo connected 🚀");
   } catch (err) {
@@ -53,6 +54,20 @@ async function connectDB() {
   }
 }
 connectDB();
+
+// --------------------
+// 🔒 ADMIN PROTECTION
+// --------------------
+function checkAdmin(req, res) {
+  const secret = req.headers["x-admin-secret"];
+
+  if (!ADMIN_SECRET || secret !== ADMIN_SECRET) {
+    res.status(403).json({ error: "Unauthorized" });
+    return false;
+  }
+
+  return true;
+}
 
 // --------------------
 // KEY GENERATOR
@@ -155,9 +170,11 @@ app.post("/webhook", async (req, res) => {
 });
 
 // --------------------
-// ADMIN GENERATE KEY
+// 🔑 ADMIN: GENERATE KEY (PROTECTED)
 // --------------------
 app.post("/admin/generate-key", async (req, res) => {
+  if (!checkAdmin(req, res)) return;
+
   try {
     const { credits } = req.body;
 
@@ -202,20 +219,18 @@ app.post("/redeem", async (req, res) => {
       return res.status(400).json({ error: "Key already used" });
     }
 
-    // mark used
     await keysCollection.updateOne(
       { key },
       { $set: { used: true } }
     );
 
-    // give credits
     await usersCollection.updateOne(
       { userId },
       { $inc: { credits: found.credits } },
       { upsert: true }
     );
 
-    // 🔥 SAVE HISTORY
+    // SAVE HISTORY
     await historyCollection.insertOne({
       userId,
       key,
@@ -234,9 +249,11 @@ app.post("/redeem", async (req, res) => {
 });
 
 // --------------------
-// GET REDEEM HISTORY
+// 📜 ADMIN: REDEEM HISTORY (PROTECTED)
 // --------------------
 app.get("/admin/redeem-history", async (req, res) => {
+  if (!checkAdmin(req, res)) return;
+
   try {
     const userId = req.query.userId;
 
