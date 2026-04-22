@@ -37,7 +37,7 @@ function maskKey(key) {
 }
 
 // --------------------
-// SAFE FETCH (WITH TIMEOUT)
+// SAFE FETCH
 // --------------------
 async function safeFetchJSON(url, options = {}) {
   try {
@@ -117,9 +117,18 @@ const commands = [
     .setName("redeemhistory")
     .setDescription("View redeem history (admin only)")
     .addUserOption(o =>
-      o.setName("user")
-        .setDescription("User to check")
-        .setRequired(false)
+      o.setName("user").setDescription("User to check").setRequired(false)
+    ),
+
+  // 🔥 NEW COMMAND
+  new SlashCommandBuilder()
+    .setName("removecredits")
+    .setDescription("Remove credits from a user (admin only)")
+    .addUserOption(o =>
+      o.setName("user").setDescription("User").setRequired(true)
+    )
+    .addIntegerOption(o =>
+      o.setName("amount").setDescription("Amount").setRequired(true)
     )
 ].map(c => c.toJSON());
 
@@ -266,9 +275,37 @@ client.on("interactionCreate", async (interaction) => {
       return interaction.editReply({ embeds: [embed] });
     }
 
+    // --------------------
+    // ❌ /removecredits (NEW)
+    // --------------------
+    if (interaction.commandName === "removecredits") {
+      if (!interaction.memberPermissions?.has(PermissionsBitField.Flags.Administrator)) {
+        return interaction.editReply("❌ No permission");
+      }
+
+      const user = interaction.options.getUser("user");
+      const amount = interaction.options.getInteger("amount");
+
+      const data = await safeFetchJSON(`${API}/admin/remove-credits`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-secret": process.env.ADMIN_SECRET
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          amount
+        })
+      });
+
+      if (!data) return interaction.editReply("❌ Server offline");
+      if (data.error) return interaction.editReply(`❌ ${data.error}`);
+
+      return interaction.editReply(`❌ Removed ${amount} credits from <@${user.id}>`);
+    }
+
   } catch (err) {
     console.log("❌ Interaction error:", err);
-
     if (!interaction.replied) {
       interaction.editReply("❌ Unexpected error");
     }
