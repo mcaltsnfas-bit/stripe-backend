@@ -29,7 +29,7 @@ const API = "https://stripe-backend-1-65oj.onrender.com";
 let adminToken = null;
 
 // --------------------
-// LOGIN
+// LOGIN ADMIN
 // --------------------
 async function loginAdmin() {
   const res = await safeFetchJSON(`${API}/admin/login`, {
@@ -91,7 +91,7 @@ async function safeFetchJSON(url, options = {}) {
 }
 
 // --------------------
-// LOG
+// LOG REDEEM
 // --------------------
 async function logRedeem(data) {
   try {
@@ -117,58 +117,71 @@ async function logRedeem(data) {
 }
 
 // --------------------
-// COMMANDS
+// COMMANDS (FIXED ALL DESCRIPTIONS)
 // --------------------
 const commands = [
   new SlashCommandBuilder()
     .setName("redeem")
     .setDescription("Redeem a key")
     .addStringOption(o =>
-      o.setName("key").setRequired(true)
+      o.setName("key")
+        .setDescription("Your redeem key")
+        .setRequired(true)
     ),
 
   new SlashCommandBuilder()
     .setName("balance")
-    .setDescription("Check credits"),
+    .setDescription("Check your credits"),
 
   new SlashCommandBuilder()
     .setName("generatekey")
-    .setDescription("Generate key (admin)")
+    .setDescription("Generate a key (admin only)")
     .addIntegerOption(o =>
-      o.setName("credits").setRequired(true)
+      o.setName("credits")
+        .setDescription("Amount of credits")
+        .setRequired(true)
     ),
 
   new SlashCommandBuilder()
     .setName("redeemhistory")
-    .setDescription("History (admin)")
+    .setDescription("View redeem history (admin only)")
     .addUserOption(o =>
-      o.setName("user").setRequired(false)
+      o.setName("user")
+        .setDescription("User to filter (optional)")
+        .setRequired(false)
     ),
 
   new SlashCommandBuilder()
     .setName("removecredits")
-    .setDescription("Remove credits (admin)")
+    .setDescription("Remove credits from a user (admin only)")
     .addUserOption(o =>
-      o.setName("user").setRequired(true)
+      o.setName("user")
+        .setDescription("Target user")
+        .setRequired(true)
     )
     .addIntegerOption(o =>
-      o.setName("amount").setRequired(true)
+      o.setName("amount")
+        .setDescription("Amount to remove")
+        .setRequired(true)
     ),
 
-  // ⭐ NEW COMMAND
   new SlashCommandBuilder()
     .setName("addcredits")
-    .setDescription("Add credits to a user (admin)")
+    .setDescription("Add credits to a user (admin only)")
     .addUserOption(o =>
-      o.setName("user").setRequired(true)
+      o.setName("user")
+        .setDescription("Target user")
+        .setRequired(true)
     )
     .addIntegerOption(o =>
-      o.setName("amount").setRequired(true)
+      o.setName("amount")
+        .setDescription("Amount to add")
+        .setRequired(true)
     )
 ].map(c => c.toJSON());
 
 // --------------------
-// REGISTER
+// REGISTER COMMANDS
 // --------------------
 const rest = new REST({ version: "10" }).setToken(process.env.DISCORD_TOKEN);
 
@@ -197,7 +210,7 @@ client.on("ready", async () => {
 });
 
 // --------------------
-// COMMAND HANDLER
+// INTERACTIONS
 // --------------------
 client.on("interactionCreate", async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
@@ -206,7 +219,98 @@ client.on("interactionCreate", async (interaction) => {
     await interaction.deferReply({ ephemeral: true });
 
     // --------------------
-    // ADD CREDITS ⭐ NEW
+    // REDEEM
+    // --------------------
+    if (interaction.commandName === "redeem") {
+      const key = interaction.options.getString("key");
+
+      const data = await safeFetchJSON(`${API}/redeem`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          key,
+          userId: interaction.user.id
+        })
+      });
+
+      if (!data) return interaction.editReply("❌ Server offline");
+      if (!data.success) return interaction.editReply(`❌ ${data.error}`);
+
+      await logRedeem({
+        user: interaction.user,
+        credits: data.credits,
+        key
+      });
+
+      return interaction.editReply(`✅ You got ${data.credits} credits`);
+    }
+
+    // --------------------
+    // BALANCE
+    // --------------------
+    if (interaction.commandName === "balance") {
+      const data = await safeFetchJSON(`${API}/balance?userId=${interaction.user.id}`);
+
+      if (!data) return interaction.editReply("❌ Server offline");
+
+      return interaction.editReply(`💰 Balance: ${data.credits}`);
+    }
+
+    // --------------------
+    // GENERATE KEY
+    // --------------------
+    if (interaction.commandName === "generatekey") {
+      if (!interaction.memberPermissions?.has(PermissionsBitField.Flags.Administrator)) {
+        return interaction.editReply("❌ No permission");
+      }
+
+      const credits = interaction.options.getInteger("credits");
+
+      const data = await safeFetchJSON(`${API}/admin/generate-key`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-token": adminToken
+        },
+        body: JSON.stringify({ credits })
+      });
+
+      if (!data) return interaction.editReply("❌ Server offline");
+
+      return interaction.editReply(`🔑 \`${data.key}\` | ${data.credits} credits`);
+    }
+
+    // --------------------
+    // REMOVE CREDITS
+    // --------------------
+    if (interaction.commandName === "removecredits") {
+      if (!interaction.memberPermissions?.has(PermissionsBitField.Flags.Administrator)) {
+        return interaction.editReply("❌ No permission");
+      }
+
+      const user = interaction.options.getUser("user");
+      const amount = interaction.options.getInteger("amount");
+
+      const data = await safeFetchJSON(`${API}/admin/remove-credits`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-token": adminToken
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          amount
+        })
+      });
+
+      if (!data) return interaction.editReply("❌ Server offline");
+      if (data.error) return interaction.editReply(`❌ ${data.error}`);
+
+      return interaction.editReply(`❌ Removed ${amount} credits from <@${user.id}>`);
+    }
+
+    // --------------------
+    // ADD CREDITS (NEW)
     // --------------------
     if (interaction.commandName === "addcredits") {
       if (!interaction.memberPermissions?.has(PermissionsBitField.Flags.Administrator)) {
@@ -233,10 +337,6 @@ client.on("interactionCreate", async (interaction) => {
 
       return interaction.editReply(`✅ Added ${amount} credits to <@${user.id}>`);
     }
-
-    // --------------------
-    // (your other commands stay EXACTLY same)
-    // --------------------
 
   } catch (err) {
     console.log("Interaction error:", err);
