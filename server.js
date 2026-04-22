@@ -115,7 +115,7 @@ app.post("/create-checkout", async (req, res) => {
 });
 
 // --------------------
-// WEBHOOK
+// WEBHOOK (AUTO KEY GEN)
 // --------------------
 app.post("/webhook", async (req, res) => {
   console.log("🔥 WEBHOOK HIT");
@@ -139,17 +139,15 @@ app.post("/webhook", async (req, res) => {
     const key = generateKey();
     const credits = session.metadata?.credits;
 
-    if (keysCollection) {
-      await keysCollection.insertOne({
-        key,
-        sessionId: session.id,
-        credits: Number(credits),
-        used: false,
-        createdAt: Date.now()
-      });
+    await keysCollection.insertOne({
+      key,
+      sessionId: session.id,
+      credits: Number(credits),
+      used: false,
+      createdAt: Date.now()
+    });
 
-      console.log("✅ KEY CREATED:", key);
-    }
+    console.log("✅ KEY CREATED:", key);
   }
 
   res.json({ received: true });
@@ -178,7 +176,7 @@ app.get("/get-key-by-session", async (req, res) => {
 });
 
 // --------------------
-// ADMIN KEYS
+// ADMIN KEYS LIST
 // --------------------
 app.get("/admin/keys", async (req, res) => {
   const keys = await keysCollection.find({}).sort({ createdAt: -1 }).toArray();
@@ -186,7 +184,7 @@ app.get("/admin/keys", async (req, res) => {
 });
 
 // --------------------
-// 🔥 ADMIN: GENERATE KEY (FIXED)
+// ADMIN GENERATE KEY
 // --------------------
 app.post("/admin/generate-key", async (req, res) => {
   try {
@@ -236,11 +234,13 @@ app.post("/redeem", async (req, res) => {
       return res.status(400).json({ error: "Key already used" });
     }
 
+    // mark used
     await keysCollection.updateOne(
       { key },
       { $set: { used: true } }
     );
 
+    // add credits
     await usersCollection.updateOne(
       { userId },
       { $inc: { credits: found.credits } },
@@ -253,7 +253,55 @@ app.post("/redeem", async (req, res) => {
     });
 
   } catch (err) {
+    console.log("Redeem error:", err);
     res.status(500).json({ error: "Server error" });
+  }
+});
+
+// --------------------
+// 🔥 LOG REDEEM (NEW)
+// --------------------
+app.post("/log-redeem", async (req, res) => {
+  try {
+    const { userId, credits, key } = req.body;
+
+    await usersCollection.updateOne(
+      { userId },
+      {
+        $push: {
+          history: {
+            key,
+            credits,
+            date: Date.now()
+          }
+        }
+      },
+      { upsert: true }
+    );
+
+    res.json({ success: true });
+
+  } catch (err) {
+    console.log("Log redeem error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// --------------------
+// 🔥 GET HISTORY (NEW)
+// --------------------
+app.get("/history", async (req, res) => {
+  try {
+    const userId = req.query.userId;
+
+    const user = await usersCollection.findOne({ userId });
+
+    res.json({
+      history: user?.history || []
+    });
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 

@@ -6,7 +6,8 @@ const {
   REST,
   Routes,
   SlashCommandBuilder,
-  PermissionsBitField
+  PermissionsBitField,
+  EmbedBuilder
 } = require("discord.js");
 
 // --------------------
@@ -17,42 +18,60 @@ const client = new Client({
 });
 
 // --------------------
-// LOG CHANNEL
+// CONFIG
 // --------------------
 const logChannelId = process.env.LOG_CHANNEL_ID;
 
-async function logRedeem(message) {
+// --------------------
+// MASKING
+// --------------------
+function maskUser(user) {
+  const name = user.username || "user";
+  return name.slice(0, 3) + "***";
+}
+
+// --------------------
+// SAFE FETCH
+// --------------------
+async function safeFetchJSON(url, options) {
+  try {
+    const res = await fetch(url, options);
+    const text = await res.text();
+
+    try {
+      return JSON.parse(text);
+    } catch {
+      console.log("❌ Non-JSON response:", text);
+      return null;
+    }
+  } catch (err) {
+    console.log("Fetch error:", err);
+    return null;
+  }
+}
+
+// --------------------
+// LOGS
+// --------------------
+async function logRedeem(data) {
   try {
     if (!logChannelId) return;
 
     const channel = await client.channels.fetch(logChannelId);
     if (!channel) return;
 
-    channel.send(message);
+    const embed = new EmbedBuilder()
+      .setTitle("🧾 Redeem Logged")
+      .setColor(0x2ecc71)
+      .addFields(
+        { name: "User", value: maskUser(data.user), inline: true },
+        { name: "Credits", value: `${data.credits}`, inline: true }
+      )
+      .setTimestamp();
+
+    channel.send({ embeds: [embed] });
   } catch (err) {
     console.log("Log error:", err);
-  }
-}
-
-// --------------------
-// SAFE FETCH JSON (FIXES YOUR ERROR)
-// --------------------
-async function safeFetchJSON(url, options) {
-  try {
-    const res = await fetch(url, options);
-
-    const text = await res.text(); // IMPORTANT FIX
-
-    try {
-      return JSON.parse(text);
-    } catch {
-      console.log("❌ Non-JSON response from:", url);
-      console.log(text);
-      return null;
-    }
-  } catch (err) {
-    console.log("Fetch error:", err);
-    return null;
   }
 }
 
@@ -63,10 +82,8 @@ const commands = [
   new SlashCommandBuilder()
     .setName("redeem")
     .setDescription("Redeem a key")
-    .addStringOption(option =>
-      option.setName("key")
-        .setDescription("Your key")
-        .setRequired(true)
+    .addStringOption(o =>
+      o.setName("key").setDescription("Your key").setRequired(true)
     ),
 
   new SlashCommandBuilder()
@@ -75,13 +92,15 @@ const commands = [
 
   new SlashCommandBuilder()
     .setName("generatekey")
-    .setDescription("Generate a key (admin only)")
-    .addIntegerOption(option =>
-      option.setName("credits")
-        .setDescription("Amount of credits")
-        .setRequired(true)
-    )
-].map(cmd => cmd.toJSON());
+    .setDescription("Admin key generator")
+    .addIntegerOption(o =>
+      o.setName("credits").setDescription("Credits").setRequired(true)
+    ),
+
+  new SlashCommandBuilder()
+    .setName("redeemhistory")
+    .setDescription("View your recent redeems")
+].map(c => c.toJSON());
 
 // --------------------
 // REGISTER COMMANDS
@@ -89,21 +108,15 @@ const commands = [
 const rest = new REST({ version: "10" }).setToken(process.env.DISCORD_TOKEN);
 
 (async () => {
-  try {
-    console.log("🔄 Registering slash commands...");
+  await rest.put(
+    Routes.applicationGuildCommands(
+      process.env.CLIENT_ID,
+      process.env.GUILD_ID
+    ),
+    { body: commands }
+  );
 
-    await rest.put(
-      Routes.applicationGuildCommands(
-        process.env.CLIENT_ID,
-        process.env.GUILD_ID
-      ),
-      { body: commands }
-    );
-
-    console.log("✅ Slash commands ready");
-  } catch (err) {
-    console.error(err);
-  }
+  console.log("✅ Commands registered");
 })();
 
 // --------------------
@@ -139,21 +152,29 @@ client.on("interactionCreate", async (interaction) => {
       }
     );
 
-    if (!data) {
-      return interaction.editReply("❌ Server error (invalid response)");
-    }
+    if (!data) return interaction.editReply("❌ Server error");
 
     if (data.success) {
-      const logMsg = `✅ **Key Redeemed**
-👤 User: <@${interaction.user.id}>
-🔑 Key: ||${key}||
-💰 Credits: ${data.credits}`;
-
-      await logRedeem(logMsg);
-
-      return interaction.editReply(
-        `✅ Redeemed! You got ${data.credits} credits`
+      // send to backend history
+      await safeFetchJSON(
+        "https://stripe-backend-1-65oj.onrender.com/log-redeem",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: interaction.user.id,
+            credits: data.credits,
+            key
+          })
+        }
       );
+
+      await logRedeem({
+        user: interaction.user,
+        credits: data.credits
+      });
+
+      return interaction.editReply(`✅ You got ${data.credits} credits`);
     }
 
     return interaction.editReply(`❌ ${data.error}`);
@@ -169,13 +190,9 @@ client.on("interactionCreate", async (interaction) => {
       `https://stripe-backend-1-65oj.onrender.com/balance?userId=${interaction.user.id}`
     );
 
-    if (!data) {
-      return interaction.editReply("❌ Server error");
-    }
+    if (!data) return interaction.editReply("❌ Server error");
 
-    return interaction.editReply(
-      `💰 Your balance: ${data.credits} credits`
-    );
+    return interaction.editReply(`💰 Balance: ${data.credits}`);
   }
 
   // --------------------
@@ -185,7 +202,7 @@ client.on("interactionCreate", async (interaction) => {
     await interaction.deferReply({ ephemeral: true });
 
     if (!interaction.memberPermissions?.has(PermissionsBitField.Flags.Administrator)) {
-      return interaction.editReply("❌ You don't have permission.");
+      return interaction.editReply("❌ No permission");
     }
 
     const credits = interaction.options.getInteger("credits");
@@ -199,17 +216,37 @@ client.on("interactionCreate", async (interaction) => {
       }
     );
 
-    if (!data) {
-      return interaction.editReply("❌ Server error (invalid response)");
+    if (!data) return interaction.editReply("❌ Server error");
+
+    return interaction.editReply(`🔑 \`${data.key}\` | ${data.credits} credits`);
+  }
+
+  // --------------------
+  // /redeemhistory
+  // --------------------
+  if (interaction.commandName === "redeemhistory") {
+    await interaction.deferReply({ ephemeral: true });
+
+    const data = await safeFetchJSON(
+      `https://stripe-backend-1-65oj.onrender.com/history?userId=${interaction.user.id}`
+    );
+
+    if (!data || !data.history) {
+      return interaction.editReply("❌ No history found");
     }
 
-    if (data.success) {
-      return interaction.editReply(
-        `✅ Key Generated!\n\n🔑 \`${data.key}\`\n💰 ${data.credits} credits`
-      );
-    }
+    const embed = new EmbedBuilder()
+      .setTitle("📜 Redeem History")
+      .setColor(0x3498db);
 
-    return interaction.editReply(`❌ ${data.error}`);
+    data.history.slice(0, 5).forEach((h, i) => {
+      embed.addFields({
+        name: `#${i + 1}`,
+        value: `💰 ${h.credits} credits\n🔑 ${h.key}`
+      });
+    });
+
+    return interaction.editReply({ embeds: [embed] });
   }
 });
 
