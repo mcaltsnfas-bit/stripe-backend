@@ -53,6 +53,10 @@
     #dashboard {
       display: none;
     }
+
+    .admin-actions {
+      margin: 15px 0;
+    }
   </style>
 </head>
 
@@ -74,6 +78,11 @@
   <p>All purchased keys:</p>
 
   <button onclick="logout()">Logout</button>
+
+  <!-- ADMIN ACTIONS -->
+  <div class="admin-actions">
+    <button onclick="removeCredits()">❌ Remove Credits</button>
+  </div>
 
   <div id="keys">Loading...</div>
   <div id="error" class="error"></div>
@@ -149,13 +158,42 @@
     }
   }
 
+  // ---------------- REMOVE CREDITS ----------------
+  async function removeCredits() {
+    const userId = prompt("Enter userId:");
+    const amount = prompt("Enter amount to remove:");
+
+    if (!userId || !amount) return;
+
+    const res = await fetch("/admin/remove-credits", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-admin-token": localStorage.getItem("admin_token")
+      },
+      body: JSON.stringify({
+        userId,
+        amount
+      })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert("Error: " + data.error);
+      return;
+    }
+
+    alert(data.message);
+  }
+
   // ---------------- LOGOUT ----------------
   function logout() {
     localStorage.removeItem("admin_token");
     location.reload();
   }
 
-  // ---------------- AUTO LOGIN IF TOKEN EXISTS ----------------
+  // ---------------- AUTO LOGIN ----------------
   if (localStorage.getItem("admin_token")) {
     document.getElementById("loginBox").style.display = "none";
     document.getElementById("dashboard").style.display = "block";

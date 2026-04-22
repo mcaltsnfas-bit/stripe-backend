@@ -27,12 +27,12 @@ const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI;
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
-const ADMIN_SECRET = process.env.ADMIN_SECRET; // password for login
+const ADMIN_SECRET = process.env.ADMIN_SECRET;
 
 const stripe = STRIPE_SECRET_KEY ? Stripe(STRIPE_SECRET_KEY) : null;
 
 // --------------------
-// ADMIN SESSIONS (LOGIN SYSTEM)
+// ADMIN SESSIONS
 // --------------------
 const adminSessions = new Map();
 
@@ -72,15 +72,13 @@ app.post("/admin/login", (req, res) => {
   }
 
   const token = crypto.randomBytes(24).toString("hex");
-
-  // 1 hour session
   adminSessions.set(token, Date.now() + 1000 * 60 * 60);
 
   res.json({ token });
 });
 
 // --------------------
-// 🔒 ADMIN CHECK (TOKEN BASED)
+// CHECK ADMIN TOKEN
 // --------------------
 function checkAdmin(req, res) {
   const token = req.headers["x-admin-token"];
@@ -201,31 +199,18 @@ app.post("/webhook", async (req, res) => {
 app.post("/admin/generate-key", async (req, res) => {
   if (!checkAdmin(req, res)) return;
 
-  try {
-    const { credits } = req.body;
+  const { credits } = req.body;
 
-    if (!credits) {
-      return res.status(400).json({ error: "Missing credits" });
-    }
+  const key = generateKey();
 
-    const key = generateKey();
+  await keysCollection.insertOne({
+    key,
+    credits: Number(credits),
+    used: false,
+    createdAt: Date.now()
+  });
 
-    await keysCollection.insertOne({
-      key,
-      credits: Number(credits),
-      used: false,
-      createdAt: Date.now()
-    });
-
-    res.json({
-      success: true,
-      key,
-      credits
-    });
-
-  } catch (err) {
-    res.status(500).json({ error: "Server error" });
-  }
+  res.json({ success: true, key, credits });
 });
 
 // --------------------
@@ -234,15 +219,54 @@ app.post("/admin/generate-key", async (req, res) => {
 app.get("/admin/keys", async (req, res) => {
   if (!checkAdmin(req, res)) return;
 
-  try {
-    const keys = await keysCollection
-      .find({})
-      .sort({ createdAt: -1 })
-      .limit(50)
-      .toArray();
+  const keys = await keysCollection
+    .find({})
+    .sort({ createdAt: -1 })
+    .limit(50)
+    .toArray();
 
-    res.json(keys);
+  res.json(keys);
+});
+
+// --------------------
+// 🔐 SAFE ADMIN: REMOVE CREDITS (FIXED)
+// --------------------
+app.post("/admin/remove-credits", async (req, res) => {
+  if (!checkAdmin(req, res)) return;
+
+  try {
+    const { userId, amount } = req.body;
+
+    if (!userId || !amount) {
+      return res.status(400).json({ error: "Missing userId or amount" });
+    }
+
+    const num = Number(amount);
+
+    if (num <= 0) {
+      return res.status(400).json({ error: "Invalid amount" });
+    }
+
+    const user = await usersCollection.findOne({ userId });
+
+    if (!user || user.credits < num) {
+      return res.status(400).json({
+        error: "Not enough credits or user not found"
+      });
+    }
+
+    await usersCollection.updateOne(
+      { userId },
+      { $inc: { credits: -num } }
+    );
+
+    res.json({
+      success: true,
+      message: `Removed ${num} credits from ${userId}`
+    });
+
   } catch (err) {
+    console.log("Remove credits error:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
@@ -251,40 +275,32 @@ app.get("/admin/keys", async (req, res) => {
 // REDEEM KEY
 // --------------------
 app.post("/redeem", async (req, res) => {
-  try {
-    const { key, userId } = req.body;
+  const { key, userId } = req.body;
 
-    const found = await keysCollection.findOne({ key });
+  const found = await keysCollection.findOne({ key });
 
-    if (!found) return res.status(400).json({ error: "Invalid key" });
-    if (found.used) return res.status(400).json({ error: "Key already used" });
+  if (!found) return res.status(400).json({ error: "Invalid key" });
+  if (found.used) return res.status(400).json({ error: "Key already used" });
 
-    await keysCollection.updateOne(
-      { key },
-      { $set: { used: true } }
-    );
+  await keysCollection.updateOne(
+    { key },
+    { $set: { used: true } }
+  );
 
-    await usersCollection.updateOne(
-      { userId },
-      { $inc: { credits: found.credits } },
-      { upsert: true }
-    );
+  await usersCollection.updateOne(
+    { userId },
+    { $inc: { credits: found.credits } },
+    { upsert: true }
+  );
 
-    await historyCollection.insertOne({
-      userId,
-      key,
-      credits: found.credits,
-      createdAt: Date.now()
-    });
+  await historyCollection.insertOne({
+    userId,
+    key,
+    credits: found.credits,
+    createdAt: Date.now()
+  });
 
-    res.json({
-      success: true,
-      credits: found.credits
-    });
-
-  } catch (err) {
-    res.status(500).json({ error: "Server error" });
-  }
+  res.json({ success: true, credits: found.credits });
 });
 
 // --------------------
@@ -293,22 +309,17 @@ app.post("/redeem", async (req, res) => {
 app.get("/admin/redeem-history", async (req, res) => {
   if (!checkAdmin(req, res)) return;
 
-  try {
-    const userId = req.query.userId;
+  const userId = req.query.userId;
 
-    let query = {};
-    if (userId) query.userId = userId;
+  const query = userId ? { userId } : {};
 
-    const history = await historyCollection
-      .find(query)
-      .sort({ createdAt: -1 })
-      .limit(20)
-      .toArray();
+  const history = await historyCollection
+    .find(query)
+    .sort({ createdAt: -1 })
+    .limit(20)
+    .toArray();
 
-    res.json(history);
-  } catch (err) {
-    res.status(500).json({ error: "Server error" });
-  }
+  res.json(history);
 });
 
 // --------------------
