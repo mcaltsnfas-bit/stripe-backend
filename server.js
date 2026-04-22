@@ -26,7 +26,7 @@ const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI;
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
-const ADMIN_SECRET = process.env.ADMIN_SECRET; // 🔒 IMPORTANT
+const ADMIN_SECRET = process.env.ADMIN_SECRET;
 
 const stripe = STRIPE_SECRET_KEY ? Stripe(STRIPE_SECRET_KEY) : null;
 
@@ -203,6 +203,26 @@ app.post("/admin/generate-key", async (req, res) => {
 });
 
 // --------------------
+// 🔐 ADMIN: GET ALL KEYS (PROTECTED) ✅ FIX
+// --------------------
+app.get("/admin/keys", async (req, res) => {
+  if (!checkAdmin(req, res)) return;
+
+  try {
+    const keys = await keysCollection
+      .find({})
+      .sort({ createdAt: -1 })
+      .limit(50)
+      .toArray();
+
+    res.json(keys);
+  } catch (err) {
+    console.log("Error fetching keys:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// --------------------
 // REDEEM KEY (WITH HISTORY)
 // --------------------
 app.post("/redeem", async (req, res) => {
@@ -230,7 +250,6 @@ app.post("/redeem", async (req, res) => {
       { upsert: true }
     );
 
-    // SAVE HISTORY
     await historyCollection.insertOne({
       userId,
       key,

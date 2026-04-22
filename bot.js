@@ -37,11 +37,20 @@ function maskKey(key) {
 }
 
 // --------------------
-// SAFE FETCH
+// SAFE FETCH (WITH TIMEOUT)
 // --------------------
 async function safeFetchJSON(url, options = {}) {
   try {
-    const res = await fetch(url, options);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+
+    const res = await fetch(url, {
+      ...options,
+      signal: controller.signal
+    });
+
+    clearTimeout(timeout);
+
     const text = await res.text();
 
     try {
@@ -51,7 +60,7 @@ async function safeFetchJSON(url, options = {}) {
       return null;
     }
   } catch (err) {
-    console.log("Fetch error:", err);
+    console.log("Fetch error:", err.message);
     return null;
   }
 }
@@ -76,7 +85,7 @@ async function logRedeem(data) {
       )
       .setTimestamp();
 
-    channel.send({ embeds: [embed] });
+    await channel.send({ embeds: [embed] });
   } catch (err) {
     console.log("Log error:", err);
   }
@@ -120,15 +129,19 @@ const commands = [
 const rest = new REST({ version: "10" }).setToken(process.env.DISCORD_TOKEN);
 
 (async () => {
-  await rest.put(
-    Routes.applicationGuildCommands(
-      process.env.CLIENT_ID,
-      process.env.GUILD_ID
-    ),
-    { body: commands }
-  );
+  try {
+    await rest.put(
+      Routes.applicationGuildCommands(
+        process.env.CLIENT_ID,
+        process.env.GUILD_ID
+      ),
+      { body: commands }
+    );
 
-  console.log("✅ Commands registered");
+    console.log("✅ Commands registered");
+  } catch (err) {
+    console.error(err);
+  }
 })();
 
 // --------------------
@@ -144,118 +157,121 @@ client.on("ready", () => {
 client.on("interactionCreate", async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
 
-  // --------------------
-  // /redeem
-  // --------------------
-  if (interaction.commandName === "redeem") {
+  try {
     await interaction.deferReply({ ephemeral: true });
 
-    const key = interaction.options.getString("key");
+    // --------------------
+    // /redeem
+    // --------------------
+    if (interaction.commandName === "redeem") {
+      const key = interaction.options.getString("key");
 
-    const data = await safeFetchJSON(`${API}/redeem`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        key,
-        userId: interaction.user.id
-      })
-    });
-
-    if (!data) return interaction.editReply("❌ Server error");
-
-    if (data.success) {
-      await logRedeem({
-        user: interaction.user,
-        credits: data.credits,
-        key
+      const data = await safeFetchJSON(`${API}/redeem`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          key,
+          userId: interaction.user.id
+        })
       });
 
-      return interaction.editReply(`✅ You got ${data.credits} credits`);
-    }
+      if (!data) return interaction.editReply("❌ Server offline");
 
-    return interaction.editReply(`❌ ${data.error}`);
-  }
+      if (data.success) {
+        await logRedeem({
+          user: interaction.user,
+          credits: data.credits,
+          key
+        });
 
-  // --------------------
-  // /balance
-  // --------------------
-  if (interaction.commandName === "balance") {
-    await interaction.deferReply({ ephemeral: true });
-
-    const data = await safeFetchJSON(
-      `${API}/balance?userId=${interaction.user.id}`
-    );
-
-    if (!data) return interaction.editReply("❌ Server error");
-
-    return interaction.editReply(`💰 Balance: ${data.credits}`);
-  }
-
-  // --------------------
-  // /generatekey
-  // --------------------
-  if (interaction.commandName === "generatekey") {
-    await interaction.deferReply({ ephemeral: true });
-
-    if (!interaction.memberPermissions?.has(PermissionsBitField.Flags.Administrator)) {
-      return interaction.editReply("❌ No permission");
-    }
-
-    const credits = interaction.options.getInteger("credits");
-
-    const data = await safeFetchJSON(`${API}/admin/generate-key`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-admin-secret": process.env.ADMIN_SECRET // 🔒 FIXED
-      },
-      body: JSON.stringify({ credits })
-    });
-
-    if (!data) return interaction.editReply("❌ Server error");
-
-    return interaction.editReply(`🔑 \`${data.key}\` | ${data.credits} credits`);
-  }
-
-  // --------------------
-  // /redeemhistory
-  // --------------------
-  if (interaction.commandName === "redeemhistory") {
-    await interaction.deferReply({ ephemeral: true });
-
-    if (!interaction.memberPermissions?.has(PermissionsBitField.Flags.Administrator)) {
-      return interaction.editReply("❌ No permission");
-    }
-
-    const targetUser = interaction.options.getUser("user");
-    const userId = targetUser ? targetUser.id : null;
-
-    const url = userId
-      ? `${API}/admin/redeem-history?userId=${userId}`
-      : `${API}/admin/redeem-history`;
-
-    const data = await safeFetchJSON(url, {
-      headers: {
-        "x-admin-secret": process.env.ADMIN_SECRET // 🔒 FIXED
+        return interaction.editReply(`✅ You got ${data.credits} credits`);
       }
-    });
 
-    if (!data || data.length === 0) {
-      return interaction.editReply("❌ No history found");
+      return interaction.editReply(`❌ ${data.error}`);
     }
 
-    const embed = new EmbedBuilder()
-      .setTitle("📜 Redeem History")
-      .setColor(0x3498db);
+    // --------------------
+    // /balance
+    // --------------------
+    if (interaction.commandName === "balance") {
+      const data = await safeFetchJSON(
+        `${API}/balance?userId=${interaction.user.id}`
+      );
 
-    data.slice(0, 10).forEach((h, i) => {
-      embed.addFields({
-        name: `#${i + 1}`,
-        value: `👤 <@${h.userId}>\n💰 ${h.credits} credits\n🔑 ${maskKey(h.key)}`
+      if (!data) return interaction.editReply("❌ Server offline");
+
+      return interaction.editReply(`💰 Balance: ${data.credits}`);
+    }
+
+    // --------------------
+    // /generatekey
+    // --------------------
+    if (interaction.commandName === "generatekey") {
+      if (!interaction.memberPermissions?.has(PermissionsBitField.Flags.Administrator)) {
+        return interaction.editReply("❌ No permission");
+      }
+
+      const credits = interaction.options.getInteger("credits");
+
+      const data = await safeFetchJSON(`${API}/admin/generate-key`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-secret": process.env.ADMIN_SECRET
+        },
+        body: JSON.stringify({ credits })
       });
-    });
 
-    return interaction.editReply({ embeds: [embed] });
+      if (!data) return interaction.editReply("❌ Server offline");
+
+      return interaction.editReply(`🔑 \`${data.key}\` | ${data.credits} credits`);
+    }
+
+    // --------------------
+    // /redeemhistory
+    // --------------------
+    if (interaction.commandName === "redeemhistory") {
+      if (!interaction.memberPermissions?.has(PermissionsBitField.Flags.Administrator)) {
+        return interaction.editReply("❌ No permission");
+      }
+
+      const targetUser = interaction.options.getUser("user");
+      const userId = targetUser ? targetUser.id : null;
+
+      const url = userId
+        ? `${API}/admin/redeem-history?userId=${userId}`
+        : `${API}/admin/redeem-history`;
+
+      const data = await safeFetchJSON(url, {
+        headers: {
+          "x-admin-secret": process.env.ADMIN_SECRET
+        }
+      });
+
+      if (!data || data.length === 0) {
+        return interaction.editReply("❌ No history found");
+      }
+
+      const embed = new EmbedBuilder()
+        .setTitle("📜 Redeem History")
+        .setColor(0x3498db);
+
+      data.slice(0, 10).forEach((h, i) => {
+        embed.addFields({
+          name: `#${i + 1}`,
+          value: `👤 <@${h.userId}>\n💰 ${h.credits} credits\n🔑 ${maskKey(h.key)}`
+        });
+      });
+
+      return interaction.editReply({ embeds: [embed] });
+    }
+
+  } catch (err) {
+    console.log("❌ Interaction error:", err);
+
+    if (!interaction.replied) {
+      interaction.editReply("❌ Unexpected error");
+    }
   }
 });
 

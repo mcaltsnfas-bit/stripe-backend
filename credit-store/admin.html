@@ -35,6 +35,11 @@
     .unused {
       color: #00ff88;
     }
+
+    .error {
+      color: red;
+      margin-top: 10px;
+    }
   </style>
 </head>
 
@@ -44,11 +49,24 @@
   <p>All purchased keys:</p>
 
   <div id="keys">Loading...</div>
+  <div id="error" class="error"></div>
 
   <script>
+    const ADMIN_SECRET = "sk_9fK2xLqP7vR8mTz4YwB1cH6nUe";
+
     async function loadKeys() {
       try {
-        const res = await fetch("/admin/keys");
+        const res = await fetch("/admin/keys", {
+          headers: {
+            "x-admin-secret": ADMIN_SECRET
+          }
+        });
+
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error("Server error: " + text);
+        }
+
         const data = await res.json();
 
         const container = document.getElementById("keys");
@@ -73,8 +91,10 @@
         });
 
       } catch (err) {
-        document.getElementById("keys").innerText = "Error loading keys";
         console.error(err);
+        document.getElementById("keys").innerText = "";
+        document.getElementById("error").innerText =
+          "Error loading keys: " + err.message;
       }
     }
 
