@@ -4,6 +4,7 @@ const express = require("express");
 const cors = require("cors");
 const { MongoClient } = require("mongodb");
 const Stripe = require("stripe");
+const crypto = require("crypto");
 
 const app = express();
 
@@ -26,9 +27,14 @@ const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI;
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
-const ADMIN_SECRET = process.env.ADMIN_SECRET;
+const ADMIN_SECRET = process.env.ADMIN_SECRET; // password for login
 
 const stripe = STRIPE_SECRET_KEY ? Stripe(STRIPE_SECRET_KEY) : null;
+
+// --------------------
+// ADMIN SESSIONS (LOGIN SYSTEM)
+// --------------------
+const adminSessions = new Map();
 
 // --------------------
 // MONGO
@@ -56,12 +62,32 @@ async function connectDB() {
 connectDB();
 
 // --------------------
-// 🔒 ADMIN PROTECTION
+// 🔐 ADMIN LOGIN
+// --------------------
+app.post("/admin/login", (req, res) => {
+  const { password } = req.body;
+
+  if (!ADMIN_SECRET || password !== ADMIN_SECRET) {
+    return res.status(403).json({ error: "Invalid password" });
+  }
+
+  const token = crypto.randomBytes(24).toString("hex");
+
+  // 1 hour session
+  adminSessions.set(token, Date.now() + 1000 * 60 * 60);
+
+  res.json({ token });
+});
+
+// --------------------
+// 🔒 ADMIN CHECK (TOKEN BASED)
 // --------------------
 function checkAdmin(req, res) {
-  const secret = req.headers["x-admin-secret"];
+  const token = req.headers["x-admin-token"];
 
-  if (!ADMIN_SECRET || secret !== ADMIN_SECRET) {
+  const expiry = adminSessions.get(token);
+
+  if (!token || !expiry || Date.now() > expiry) {
     res.status(403).json({ error: "Unauthorized" });
     return false;
   }
@@ -170,7 +196,7 @@ app.post("/webhook", async (req, res) => {
 });
 
 // --------------------
-// 🔑 ADMIN: GENERATE KEY (PROTECTED)
+// 🔑 ADMIN: GENERATE KEY
 // --------------------
 app.post("/admin/generate-key", async (req, res) => {
   if (!checkAdmin(req, res)) return;
@@ -203,7 +229,7 @@ app.post("/admin/generate-key", async (req, res) => {
 });
 
 // --------------------
-// 🔐 ADMIN: GET ALL KEYS (PROTECTED) ✅ FIX
+// 🔐 ADMIN: GET KEYS
 // --------------------
 app.get("/admin/keys", async (req, res) => {
   if (!checkAdmin(req, res)) return;
@@ -217,13 +243,12 @@ app.get("/admin/keys", async (req, res) => {
 
     res.json(keys);
   } catch (err) {
-    console.log("Error fetching keys:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
 
 // --------------------
-// REDEEM KEY (WITH HISTORY)
+// REDEEM KEY
 // --------------------
 app.post("/redeem", async (req, res) => {
   try {
@@ -231,13 +256,8 @@ app.post("/redeem", async (req, res) => {
 
     const found = await keysCollection.findOne({ key });
 
-    if (!found) {
-      return res.status(400).json({ error: "Invalid key" });
-    }
-
-    if (found.used) {
-      return res.status(400).json({ error: "Key already used" });
-    }
+    if (!found) return res.status(400).json({ error: "Invalid key" });
+    if (found.used) return res.status(400).json({ error: "Key already used" });
 
     await keysCollection.updateOne(
       { key },
@@ -268,7 +288,7 @@ app.post("/redeem", async (req, res) => {
 });
 
 // --------------------
-// 📜 ADMIN: REDEEM HISTORY (PROTECTED)
+// ADMIN HISTORY
 // --------------------
 app.get("/admin/redeem-history", async (req, res) => {
   if (!checkAdmin(req, res)) return;

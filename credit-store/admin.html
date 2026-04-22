@@ -16,6 +16,15 @@
       color: #00ff88;
     }
 
+    input, button {
+      padding: 10px;
+      margin: 5px;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
     .key {
       background: #1c1c1c;
       padding: 12px;
@@ -40,66 +49,119 @@
       color: red;
       margin-top: 10px;
     }
+
+    #dashboard {
+      display: none;
+    }
   </style>
 </head>
 
 <body>
 
+<!-- ---------------- LOGIN ---------------- -->
+<div id="loginBox">
+  <h1>🔐 Admin Login</h1>
+
+  <input type="password" id="password" placeholder="Enter password" />
+  <button onclick="login()">Login</button>
+
+  <p id="loginError" class="error"></p>
+</div>
+
+<!-- ---------------- DASHBOARD ---------------- -->
+<div id="dashboard">
   <h1>🔐 Admin Dashboard</h1>
   <p>All purchased keys:</p>
 
+  <button onclick="logout()">Logout</button>
+
   <div id="keys">Loading...</div>
   <div id="error" class="error"></div>
+</div>
 
-  <script>
-    const ADMIN_SECRET = "sk_9fK2xLqP7vR8mTz4YwB1cH6nUe";
+<script>
+  // ---------------- LOGIN ----------------
+  async function login() {
+    const password = document.getElementById("password").value;
 
-    async function loadKeys() {
-      try {
-        const res = await fetch("/admin/keys", {
-          headers: {
-            "x-admin-secret": ADMIN_SECRET
-          }
-        });
+    const res = await fetch("/admin/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password })
+    });
 
-        if (!res.ok) {
-          const text = await res.text();
-          throw new Error("Server error: " + text);
-        }
+    const data = await res.json();
 
-        const data = await res.json();
-
-        const container = document.getElementById("keys");
-        container.innerHTML = "";
-
-        data.forEach(k => {
-          const div = document.createElement("div");
-          div.className = "key";
-
-          div.innerHTML = `
-            <div>🔑 <b>${k.key}</b></div>
-            <div class="credits">${k.credits} credits</div>
-            <div>Status: <span class="${k.used ? "used" : "unused"}">
-              ${k.used ? "USED" : "NOT USED"}
-            </span></div>
-            <div style="opacity:0.5;font-size:12px">
-              ${new Date(k.createdAt).toLocaleString()}
-            </div>
-          `;
-
-          container.appendChild(div);
-        });
-
-      } catch (err) {
-        console.error(err);
-        document.getElementById("keys").innerText = "";
-        document.getElementById("error").innerText =
-          "Error loading keys: " + err.message;
-      }
+    if (!res.ok) {
+      document.getElementById("loginError").innerText = "❌ Wrong password";
+      return;
     }
 
+    localStorage.setItem("admin_token", data.token);
+
+    document.getElementById("loginBox").style.display = "none";
+    document.getElementById("dashboard").style.display = "block";
+
     loadKeys();
-  </script>
+  }
+
+  // ---------------- LOAD KEYS ----------------
+  async function loadKeys() {
+    try {
+      const token = localStorage.getItem("admin_token");
+
+      const res = await fetch("/admin/keys", {
+        headers: {
+          "x-admin-token": token
+        }
+      });
+
+      if (!res.ok) {
+        throw new Error("Unauthorized or server error");
+      }
+
+      const data = await res.json();
+
+      const container = document.getElementById("keys");
+      container.innerHTML = "";
+
+      data.forEach(k => {
+        const div = document.createElement("div");
+        div.className = "key";
+
+        div.innerHTML = `
+          <div>🔑 <b>${k.key}</b></div>
+          <div class="credits">${k.credits} credits</div>
+          <div>Status: <span class="${k.used ? "used" : "unused"}">
+            ${k.used ? "USED" : "NOT USED"}
+          </span></div>
+          <div style="opacity:0.5;font-size:12px">
+            ${new Date(k.createdAt).toLocaleString()}
+          </div>
+        `;
+
+        container.appendChild(div);
+      });
+
+    } catch (err) {
+      document.getElementById("error").innerText =
+        "Error loading keys: " + err.message;
+    }
+  }
+
+  // ---------------- LOGOUT ----------------
+  function logout() {
+    localStorage.removeItem("admin_token");
+    location.reload();
+  }
+
+  // ---------------- AUTO LOGIN IF TOKEN EXISTS ----------------
+  if (localStorage.getItem("admin_token")) {
+    document.getElementById("loginBox").style.display = "none";
+    document.getElementById("dashboard").style.display = "block";
+    loadKeys();
+  }
+</script>
 
 </body>
 </html>
