@@ -36,13 +36,17 @@ const client = new MongoClient(MONGO_URI || "");
 
 let keysCollection;
 let usersCollection;
+let historyCollection; // NEW
 
 async function connectDB() {
   try {
     await client.connect();
     const db = client.db("creditstore");
+
     keysCollection = db.collection("keys");
     usersCollection = db.collection("users");
+    historyCollection = db.collection("history"); // NEW
+
     console.log("Mongo connected 🚀");
   } catch (err) {
     console.log("Mongo error:", err);
@@ -115,11 +119,9 @@ app.post("/create-checkout", async (req, res) => {
 });
 
 // --------------------
-// WEBHOOK (AUTO KEY GEN)
+// WEBHOOK
 // --------------------
 app.post("/webhook", async (req, res) => {
-  console.log("🔥 WEBHOOK HIT");
-
   let event;
 
   try {
@@ -129,7 +131,6 @@ app.post("/webhook", async (req, res) => {
       STRIPE_WEBHOOK_SECRET
     );
   } catch (err) {
-    console.log("Webhook error:", err.message);
     return res.status(400).send("Webhook Error");
   }
 
@@ -154,36 +155,6 @@ app.post("/webhook", async (req, res) => {
 });
 
 // --------------------
-// GET KEY
-// --------------------
-app.get("/get-key-by-session", async (req, res) => {
-  const sessionId = req.query.session_id;
-
-  if (!sessionId) {
-    return res.status(400).json({ error: "Missing session_id" });
-  }
-
-  const record = await keysCollection.findOne({ sessionId });
-
-  if (!record) {
-    return res.status(404).json({ error: "Key not ready yet" });
-  }
-
-  res.json({
-    key: record.key,
-    credits: record.credits
-  });
-});
-
-// --------------------
-// ADMIN KEYS LIST
-// --------------------
-app.get("/admin/keys", async (req, res) => {
-  const keys = await keysCollection.find({}).sort({ createdAt: -1 }).toArray();
-  res.json(keys);
-});
-
-// --------------------
 // ADMIN GENERATE KEY
 // --------------------
 app.post("/admin/generate-key", async (req, res) => {
@@ -203,8 +174,6 @@ app.post("/admin/generate-key", async (req, res) => {
       createdAt: Date.now()
     });
 
-    console.log("🔑 Generated key:", key);
-
     res.json({
       success: true,
       key,
@@ -212,13 +181,12 @@ app.post("/admin/generate-key", async (req, res) => {
     });
 
   } catch (err) {
-    console.log("Generate key error:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
 
 // --------------------
-// REDEEM KEY
+// REDEEM KEY (WITH HISTORY)
 // --------------------
 app.post("/redeem", async (req, res) => {
   try {
@@ -240,12 +208,20 @@ app.post("/redeem", async (req, res) => {
       { $set: { used: true } }
     );
 
-    // add credits
+    // give credits
     await usersCollection.updateOne(
       { userId },
       { $inc: { credits: found.credits } },
       { upsert: true }
     );
+
+    // 🔥 SAVE HISTORY
+    await historyCollection.insertOne({
+      userId,
+      key,
+      credits: found.credits,
+      createdAt: Date.now()
+    });
 
     res.json({
       success: true,
@@ -253,55 +229,29 @@ app.post("/redeem", async (req, res) => {
     });
 
   } catch (err) {
-    console.log("Redeem error:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
 
 // --------------------
-// 🔥 LOG REDEEM (NEW)
+// GET REDEEM HISTORY
 // --------------------
-app.post("/log-redeem", async (req, res) => {
-  try {
-    const { userId, credits, key } = req.body;
-
-    await usersCollection.updateOne(
-      { userId },
-      {
-        $push: {
-          history: {
-            key,
-            credits,
-            date: Date.now()
-          }
-        }
-      },
-      { upsert: true }
-    );
-
-    res.json({ success: true });
-
-  } catch (err) {
-    console.log("Log redeem error:", err);
-    res.status(500).json({ error: "Server error" });
-  }
-});
-
-// --------------------
-// 🔥 GET HISTORY (NEW)
-// --------------------
-app.get("/history", async (req, res) => {
+app.get("/admin/redeem-history", async (req, res) => {
   try {
     const userId = req.query.userId;
 
-    const user = await usersCollection.findOne({ userId });
+    let query = {};
+    if (userId) query.userId = userId;
 
-    res.json({
-      history: user?.history || []
-    });
+    const history = await historyCollection
+      .find(query)
+      .sort({ createdAt: -1 })
+      .limit(20)
+      .toArray();
 
+    res.json(history);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: "Server error" });
   }
 });
 
