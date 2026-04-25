@@ -1,5 +1,7 @@
 console.log("BOOTING SERVER...");
 
+require("dotenv").config();
+
 const express = require("express");
 const cors = require("cors");
 const { MongoClient } = require("mongodb");
@@ -7,6 +9,12 @@ const Stripe = require("stripe");
 const crypto = require("crypto");
 
 const app = express();
+
+// --------------------
+// DOMAIN (IMPORTANT)
+// --------------------
+const DOMAIN = process.env.DOMAIN || "http://77.68.102.124"; 
+// change to https://mcalts.co.uk AFTER SSL
 
 // --------------------
 // WEBHOOK RAW BODY
@@ -79,7 +87,6 @@ app.post("/admin/login", (req, res) => {
   }
 
   const token = crypto.randomBytes(24).toString("hex");
-
   adminSessions.set(token, Date.now() + 1000 * 60 * 60);
 
   res.json({ token });
@@ -126,6 +133,10 @@ app.post("/create-checkout", async (req, res) => {
       1000: 800
     };
 
+    if (!priceMap[credits]) {
+      return res.status(400).json({ error: "Invalid credit amount" });
+    }
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       mode: "payment",
@@ -144,8 +155,8 @@ app.post("/create-checkout", async (req, res) => {
       metadata: {
         credits: String(credits)
       },
-      success_url: "https://stripe-backend-1-65oj.onrender.com/success.html",
-      cancel_url: "https://stripe-backend-1-65oj.onrender.com/cancel.html"
+      success_url: `${DOMAIN}/success.html`,
+      cancel_url: `${DOMAIN}/cancel.html`
     });
 
     res.json({ url: session.url });
@@ -168,6 +179,7 @@ app.post("/webhook", async (req, res) => {
       STRIPE_WEBHOOK_SECRET
     );
   } catch (err) {
+    console.log("Webhook error:", err.message);
     return res.status(400).send("Webhook Error");
   }
 
@@ -175,12 +187,12 @@ app.post("/webhook", async (req, res) => {
     const session = event.data.object;
 
     const key = generateKey();
-    const credits = session.metadata?.credits;
+    const credits = Number(session.metadata?.credits || 0);
 
     await keysCollection.insertOne({
       key,
       sessionId: session.id,
-      credits: Number(credits),
+      credits,
       used: false,
       createdAt: Date.now()
     });
@@ -198,7 +210,6 @@ app.post("/admin/generate-key", async (req, res) => {
   if (!checkAdmin(req, res)) return;
 
   const { credits } = req.body;
-
   const key = generateKey();
 
   await keysCollection.insertOne({
@@ -227,75 +238,56 @@ app.get("/admin/keys", async (req, res) => {
 });
 
 // --------------------
-// 🔥 REMOVE CREDITS
+// ADMIN: HISTORY (NEW)
+// --------------------
+app.get("/admin/redeem-history", async (req, res) => {
+  if (!checkAdmin(req, res)) return;
+
+  const userId = req.query.userId;
+
+  const query = userId ? { userId } : {};
+
+  const history = await historyCollection
+    .find(query)
+    .sort({ createdAt: -1 })
+    .limit(50)
+    .toArray();
+
+  res.json(history);
+});
+
+// --------------------
+// REMOVE CREDITS
 // --------------------
 app.post("/admin/remove-credits", async (req, res) => {
   if (!checkAdmin(req, res)) return;
 
-  try {
-    const { userId, amount } = req.body;
+  const { userId, amount } = req.body;
 
-    if (!userId || !amount) {
-      return res.status(400).json({ error: "Missing userId or amount" });
-    }
+  await usersCollection.updateOne(
+    { userId },
+    { $inc: { credits: -Number(amount) } },
+    { upsert: true }
+  );
 
-    const num = Number(amount);
-
-    if (num <= 0) {
-      return res.status(400).json({ error: "Invalid amount" });
-    }
-
-    await usersCollection.updateOne(
-      { userId },
-      { $inc: { credits: -num } },
-      { upsert: true }
-    );
-
-    res.json({
-      success: true,
-      message: `Removed ${num} credits from ${userId}`
-    });
-
-  } catch (err) {
-    console.log("Remove credits error:", err);
-    res.status(500).json({ error: "Server error" });
-  }
+  res.json({ success: true });
 });
 
 // --------------------
-// ➕ ADD CREDITS (NEW)
+// ADD CREDITS
 // --------------------
 app.post("/admin/add-credits", async (req, res) => {
   if (!checkAdmin(req, res)) return;
 
-  try {
-    const { userId, amount } = req.body;
+  const { userId, amount } = req.body;
 
-    if (!userId || !amount) {
-      return res.status(400).json({ error: "Missing userId or amount" });
-    }
+  await usersCollection.updateOne(
+    { userId },
+    { $inc: { credits: Number(amount) } },
+    { upsert: true }
+  );
 
-    const num = Number(amount);
-
-    if (num <= 0) {
-      return res.status(400).json({ error: "Invalid amount" });
-    }
-
-    await usersCollection.updateOne(
-      { userId },
-      { $inc: { credits: num } },
-      { upsert: true }
-    );
-
-    res.json({
-      success: true,
-      message: `Added ${num} credits to ${userId}`
-    });
-
-  } catch (err) {
-    console.log("Add credits error:", err);
-    res.status(500).json({ error: "Server error" });
-  }
+  res.json({ success: true });
 });
 
 // --------------------
@@ -309,10 +301,7 @@ app.post("/redeem", async (req, res) => {
   if (!found) return res.status(400).json({ error: "Invalid key" });
   if (found.used) return res.status(400).json({ error: "Key already used" });
 
-  await keysCollection.updateOne(
-    { key },
-    { $set: { used: true } }
-  );
+  await keysCollection.updateOne({ key }, { $set: { used: true } });
 
   await usersCollection.updateOne(
     { userId },
@@ -348,4 +337,5 @@ app.get("/balance", async (req, res) => {
 // --------------------
 app.listen(PORT, () => {
   console.log("SERVER STARTED ON PORT:", PORT);
+  console.log("DOMAIN:", DOMAIN);
 });
