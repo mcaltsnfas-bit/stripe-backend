@@ -41,6 +41,7 @@
       margin-top: 20px;
       font-size: 18px;
       color: #ffffff;
+      word-break: break-all;
     }
   </style>
 </head>
@@ -70,7 +71,8 @@
     throw new Error("Missing session_id");
   }
 
-fetch(`https://mcalts.co.uk/get-key-by-session?session_id=${session_id}`)
+  // 🔥 FIXED DOMAIN (your VPS / server)
+  fetch(`https://mcalts.co.uk/get-key-by-session?session_id=${session_id}`)
     .then(res => res.json())
     .then(data => {
       console.log("API RESPONSE:", data);
