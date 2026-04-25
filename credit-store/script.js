@@ -13,11 +13,12 @@ async function buyCredits(amount) {
     if (data.url) {
       window.location.href = data.url;
     } else {
-      alert("Error creating checkout");
+      console.error("Checkout error response:", data);
+      alert(data.error || "Error creating checkout");
     }
 
   } catch (err) {
-    console.error(err);
+    console.error("Fetch error:", err);
     alert("Server error. Try again.");
   }
 }
