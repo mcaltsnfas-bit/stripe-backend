@@ -1,6 +1,6 @@
 async function buyCredits(amount) {
   try {
-    const res = await fetch("https://stripe-backend-1-65oj.onrender.com/create-checkout", {
+    const res = await fetch("http://mcalts.co.uk/create-checkout", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
