@@ -16,9 +16,22 @@ const app = express();
 const DOMAIN = process.env.DOMAIN || "https://mcalts.co.uk";
 
 // --------------------
+// 🔥 FIXED CORS (IMPORTANT)
+// --------------------
+app.use(cors({
+  origin: [
+    "https://mcalts.co.uk",
+    "http://mcalts.co.uk",
+    "http://77.68.102.124:3000",
+    "http://localhost:3000"
+  ],
+  methods: ["GET", "POST"],
+  allowedHeaders: ["Content-Type", "x-admin-token"]
+}));
+
+// --------------------
 // MIDDLEWARE
 // --------------------
-app.use(cors());
 app.use(express.json());
 app.use(express.static("credit-store"));
 
@@ -170,7 +183,7 @@ app.post("/webhook", async (req, res) => {
 });
 
 // --------------------
-// GET KEY BY SESSION (FIXED)
+// GET KEY BY SESSION
 // --------------------
 app.get("/get-key-by-session", async (req, res) => {
   const sessionId = req.query.session_id;
