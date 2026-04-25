@@ -1,6 +1,6 @@
 async function buyCredits(amount) {
   try {
-    const res = await fetch("http://77.68.102.124:3000/create-checkout", {
+    const res = await fetch("https://mcalts.co.uk/create-checkout", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"

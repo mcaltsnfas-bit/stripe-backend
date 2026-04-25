@@ -41,7 +41,6 @@
       margin-top: 20px;
       font-size: 18px;
       color: #ffffff;
-      word-break: break-all;
     }
   </style>
 </head>
@@ -63,20 +62,15 @@
   const params = new URLSearchParams(window.location.search);
   const session_id = params.get("session_id");
 
-  console.log("session_id:", session_id);
-
   if (!session_id) {
     document.getElementById("key-box").innerText =
       "Error: missing session_id";
     throw new Error("Missing session_id");
   }
 
-  // 🔥 FIXED DOMAIN (your VPS / server)
   fetch(`https://mcalts.co.uk/get-key-by-session?session_id=${session_id}`)
     .then(res => res.json())
     .then(data => {
-      console.log("API RESPONSE:", data);
-
       if (!data || !data.key) {
         document.getElementById("key-box").innerText =
           "Key is still being generated... refresh in a few seconds.";

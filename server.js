@@ -13,7 +13,7 @@ const app = express();
 // --------------------
 // DOMAIN
 // --------------------
-const DOMAIN = process.env.DOMAIN || "http://77.68.102.124";
+const DOMAIN = process.env.DOMAIN || "https://mcalts.co.uk";
 
 // --------------------
 // MIDDLEWARE
@@ -170,7 +170,7 @@ app.post("/webhook", async (req, res) => {
 });
 
 // --------------------
-// 🔥 NEW: GET KEY BY SESSION (THIS FIXES YOUR SUCCESS.HTML)
+// GET KEY BY SESSION (FIXED)
 // --------------------
 app.get("/get-key-by-session", async (req, res) => {
   const sessionId = req.query.session_id;
@@ -182,7 +182,7 @@ app.get("/get-key-by-session", async (req, res) => {
   const keyDoc = await keysCollection.findOne({ sessionId });
 
   if (!keyDoc) {
-    return res.json({ key: null });
+    return res.json({});
   }
 
   res.json({
