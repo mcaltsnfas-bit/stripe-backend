@@ -11,15 +11,9 @@ const crypto = require("crypto");
 const app = express();
 
 // --------------------
-// DOMAIN (IMPORTANT)
+// DOMAIN
 // --------------------
-const DOMAIN = process.env.DOMAIN || "http://77.68.102.124"; 
-// change to https://mcalts.co.uk AFTER SSL
-
-// --------------------
-// WEBHOOK RAW BODY
-// --------------------
-app.use("/webhook", express.raw({ type: "application/json" }));
+const DOMAIN = process.env.DOMAIN || "http://77.68.102.124";
 
 // --------------------
 // MIDDLEWARE
@@ -27,6 +21,9 @@ app.use("/webhook", express.raw({ type: "application/json" }));
 app.use(cors());
 app.use(express.json());
 app.use(express.static("credit-store"));
+
+// Stripe webhook needs raw body
+app.use("/webhook", express.raw({ type: "application/json" }));
 
 // --------------------
 // ENV
@@ -77,37 +74,6 @@ function generateKey() {
 }
 
 // --------------------
-// ADMIN LOGIN
-// --------------------
-app.post("/admin/login", (req, res) => {
-  const { password } = req.body;
-
-  if (!ADMIN_SECRET || password !== ADMIN_SECRET) {
-    return res.status(403).json({ error: "Invalid password" });
-  }
-
-  const token = crypto.randomBytes(24).toString("hex");
-  adminSessions.set(token, Date.now() + 1000 * 60 * 60);
-
-  res.json({ token });
-});
-
-// --------------------
-// CHECK ADMIN
-// --------------------
-function checkAdmin(req, res) {
-  const token = req.headers["x-admin-token"];
-  const expiry = adminSessions.get(token);
-
-  if (!token || !expiry || Date.now() > expiry) {
-    res.status(403).json({ error: "Unauthorized" });
-    return false;
-  }
-
-  return true;
-}
-
-// --------------------
 // HOME
 // --------------------
 app.get("/", (req, res) => {
@@ -155,7 +121,7 @@ app.post("/create-checkout", async (req, res) => {
       metadata: {
         credits: String(credits)
       },
-      success_url: `${DOMAIN}/success.html`,
+      success_url: `${DOMAIN}/success.html?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${DOMAIN}/cancel.html`
     });
 
@@ -204,6 +170,59 @@ app.post("/webhook", async (req, res) => {
 });
 
 // --------------------
+// 🔥 NEW: GET KEY BY SESSION (THIS FIXES YOUR SUCCESS.HTML)
+// --------------------
+app.get("/get-key-by-session", async (req, res) => {
+  const sessionId = req.query.session_id;
+
+  if (!sessionId) {
+    return res.status(400).json({ error: "Missing session_id" });
+  }
+
+  const keyDoc = await keysCollection.findOne({ sessionId });
+
+  if (!keyDoc) {
+    return res.json({ key: null });
+  }
+
+  res.json({
+    key: keyDoc.key,
+    credits: keyDoc.credits
+  });
+});
+
+// --------------------
+// ADMIN LOGIN
+// --------------------
+app.post("/admin/login", (req, res) => {
+  const { password } = req.body;
+
+  if (!ADMIN_SECRET || password !== ADMIN_SECRET) {
+    return res.status(403).json({ error: "Invalid password" });
+  }
+
+  const token = crypto.randomBytes(24).toString("hex");
+  adminSessions.set(token, Date.now() + 1000 * 60 * 60);
+
+  res.json({ token });
+});
+
+// --------------------
+// CHECK ADMIN
+// --------------------
+function checkAdmin(req, res) {
+  const token = req.headers["x-admin-token"];
+  const expiry = adminSessions.get(token);
+
+  if (!token || !expiry || Date.now() > expiry) {
+    res.status(403).json({ error: "Unauthorized" });
+    return false;
+  }
+
+  return true;
+}
+
+// --------------------
 // ADMIN: GENERATE KEY
 // --------------------
 app.post("/admin/generate-key", async (req, res) => {
@@ -235,59 +254,6 @@ app.get("/admin/keys", async (req, res) => {
     .toArray();
 
   res.json(keys);
-});
-
-// --------------------
-// ADMIN: HISTORY (NEW)
-// --------------------
-app.get("/admin/redeem-history", async (req, res) => {
-  if (!checkAdmin(req, res)) return;
-
-  const userId = req.query.userId;
-
-  const query = userId ? { userId } : {};
-
-  const history = await historyCollection
-    .find(query)
-    .sort({ createdAt: -1 })
-    .limit(50)
-    .toArray();
-
-  res.json(history);
-});
-
-// --------------------
-// REMOVE CREDITS
-// --------------------
-app.post("/admin/remove-credits", async (req, res) => {
-  if (!checkAdmin(req, res)) return;
-
-  const { userId, amount } = req.body;
-
-  await usersCollection.updateOne(
-    { userId },
-    { $inc: { credits: -Number(amount) } },
-    { upsert: true }
-  );
-
-  res.json({ success: true });
-});
-
-// --------------------
-// ADD CREDITS
-// --------------------
-app.post("/admin/add-credits", async (req, res) => {
-  if (!checkAdmin(req, res)) return;
-
-  const { userId, amount } = req.body;
-
-  await usersCollection.updateOne(
-    { userId },
-    { $inc: { credits: Number(amount) } },
-    { upsert: true }
-  );
-
-  res.json({ success: true });
 });
 
 // --------------------

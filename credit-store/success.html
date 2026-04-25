@@ -70,7 +70,7 @@
     throw new Error("Missing session_id");
   }
 
-  fetch(`https://stripe-backend-1-65oj.onrender.com/get-key-by-session?session_id=${session_id}`)
+fetch(`https://mcalts.co.uk/get-key-by-session?session_id=${session_id}`)
     .then(res => res.json())
     .then(data => {
       console.log("API RESPONSE:", data);
