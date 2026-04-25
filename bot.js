@@ -21,7 +21,7 @@ const client = new Client({
 // CONFIG
 // --------------------
 const logChannelId = process.env.LOG_CHANNEL_ID;
-const API = "https://stripe-backend-1-65oj.onrender.com";
+const API = "http://77.68.102.124";
 
 // --------------------
 // ADMIN TOKEN
