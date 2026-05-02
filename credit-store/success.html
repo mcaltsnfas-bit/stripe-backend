@@ -68,7 +68,7 @@
     throw new Error("Missing session_id");
   }
 
-  fetch(`https://mcalts.co.uk/get-key-by-session?session_id=${session_id}`)
+  fetch(`/get-key-by-session?session_id=${session_id}`)
     .then(res => res.json())
     .then(data => {
       if (!data || !data.key) {
