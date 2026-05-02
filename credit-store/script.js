@@ -1,6 +1,6 @@
 async function buyCredits(amount) {
   try {
-    const res = await fetch("http://mcalts.co.uk/create-checkout", {
+    const res = await fetch("/create-checkout", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -10,13 +10,22 @@ async function buyCredits(amount) {
       })
     });
 
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error("Server response error:", errorText);
+      alert("Checkout failed: " + errorText);
+      return;
+    }
+
     const data = await res.json();
+
+    console.log("Checkout response:", data);
 
     if (data.url) {
       window.location.href = data.url;
     } else {
-      console.log("Server response:", data);
-      alert("Error creating checkout");
+      alert("Error creating checkout session");
+      console.error(data);
     }
 
   } catch (err) {
