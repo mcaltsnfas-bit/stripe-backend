@@ -21,7 +21,9 @@ const client = new Client({
 // CONFIG
 // --------------------
 const logChannelId = process.env.LOG_CHANNEL_ID;
-const API = "http://77.68.102.124";
+
+// IMPORTANT: USE YOUR LIVE DOMAIN
+const API = "https://mcalts.co.uk";
 
 // --------------------
 // ADMIN TOKEN
@@ -67,7 +69,7 @@ function maskKey(key) {
 async function safeFetchJSON(url, options = {}) {
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5000);
+    const timeout = setTimeout(() => controller.abort(), 8000);
 
     const res = await fetch(url, {
       ...options,
@@ -117,7 +119,7 @@ async function logRedeem(data) {
 }
 
 // --------------------
-// COMMANDS (FIXED ALL DESCRIPTIONS)
+// COMMANDS
 // --------------------
 const commands = [
   new SlashCommandBuilder()
@@ -197,7 +199,7 @@ const rest = new REST({ version: "10" }).setToken(process.env.DISCORD_TOKEN);
 
     console.log("✅ Commands registered");
   } catch (err) {
-    console.error(err);
+    console.error("Command registration error:", err);
   }
 })();
 
@@ -249,7 +251,9 @@ client.on("interactionCreate", async (interaction) => {
     // BALANCE
     // --------------------
     if (interaction.commandName === "balance") {
-      const data = await safeFetchJSON(`${API}/balance?userId=${interaction.user.id}`);
+      const data = await safeFetchJSON(
+        `${API}/balance?userId=${interaction.user.id}`
+      );
 
       if (!data) return interaction.editReply("❌ Server offline");
 
@@ -262,6 +266,10 @@ client.on("interactionCreate", async (interaction) => {
     if (interaction.commandName === "generatekey") {
       if (!interaction.memberPermissions?.has(PermissionsBitField.Flags.Administrator)) {
         return interaction.editReply("❌ No permission");
+      }
+
+      if (!adminToken) {
+        await loginAdmin();
       }
 
       const credits = interaction.options.getInteger("credits");
@@ -310,7 +318,7 @@ client.on("interactionCreate", async (interaction) => {
     }
 
     // --------------------
-    // ADD CREDITS (NEW)
+    // ADD CREDITS
     // --------------------
     if (interaction.commandName === "addcredits") {
       if (!interaction.memberPermissions?.has(PermissionsBitField.Flags.Administrator)) {
@@ -340,9 +348,12 @@ client.on("interactionCreate", async (interaction) => {
 
   } catch (err) {
     console.log("Interaction error:", err);
-    if (!interaction.replied) {
-      interaction.editReply("❌ Unexpected error");
-    }
+
+    try {
+      if (interaction.deferred || interaction.replied) {
+        await interaction.editReply("❌ Unexpected error");
+      }
+    } catch {}
   }
 });
 
