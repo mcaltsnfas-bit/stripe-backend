@@ -2,18 +2,28 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Credit Store</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MCALTS Credit Store</title>
+
+  <!-- FAVICON (removes favicon error even without file) -->
+  <link rel="icon" href="data:,">
+
+  <!-- SEO / Social -->
+  <meta name="description" content="Buy MCALTS credits instantly with secure payments and instant redeem keys.">
+  <meta name="theme-color" content="#00ff88">
+
+  <!-- CSS -->
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <!-- NAVBAR -->
 <div class="navbar">
-  <div class="logo">⚡ mcalts</div>
+  <div class="logo">⚡ MCALTS</div>
 
   <div class="nav-links">
     <a href="#">Home</a>
-    <a href="#">Products</a>
+    <a href="#product-list">Products</a>
   </div>
 
   <div class="right">
@@ -33,7 +43,7 @@
 
 <!-- SEARCH -->
 <div class="search">
-  <input id="search" placeholder="Search products...">
+  <input id="search" type="text" placeholder="Search products..." onkeyup="filterProducts()">
 </div>
 
 <!-- PRODUCTS -->
@@ -45,26 +55,27 @@
     <div class="price">£1.00</div>
     <button onclick="buyCredits(100)">Buy Now</button>
   </div>
-<div class="card">
-  <h2>200 Credits</h2>
-  <p>Starter pack</p>
-  <div class="price">£1.80</div>
-  <button onclick="buyCredits(200)">Buy Now</button>
-</div>
 
-<div class="card">
-  <h2>300 Credits</h2>
-  <p>Value pack</p>
-  <div class="price">£2.70</div>
-  <button onclick="buyCredits(300)">Buy Now</button>
-</div>
+  <div class="card">
+    <h2>200 Credits</h2>
+    <p>Starter pack</p>
+    <div class="price">£1.80</div>
+    <button onclick="buyCredits(200)">Buy Now</button>
+  </div>
 
-<div class="card">
-  <h2>400 Credits</h2>
-  <p>Boost pack</p>
-  <div class="price">£3.60</div>
-  <button onclick="buyCredits(400)">Buy Now</button>
-</div>
+  <div class="card">
+    <h2>300 Credits</h2>
+    <p>Value pack</p>
+    <div class="price">£2.70</div>
+    <button onclick="buyCredits(300)">Buy Now</button>
+  </div>
+
+  <div class="card">
+    <h2>400 Credits</h2>
+    <p>Boost pack</p>
+    <div class="price">£3.60</div>
+    <button onclick="buyCredits(400)">Buy Now</button>
+  </div>
 
   <div class="card">
     <h2>500 Credits</h2>
@@ -73,12 +84,12 @@
     <button onclick="buyCredits(500)">Buy Now</button>
   </div>
 
-<div class="card">
-  <h2>750 Credits</h2>
-  <p>Premium bundle</p>
-  <div class="price">£6.50</div>
-  <button onclick="buyCredits(750)">Buy Now</button>
-</div>
+  <div class="card">
+    <h2>750 Credits</h2>
+    <p>Premium bundle</p>
+    <div class="price">£6.50</div>
+    <button onclick="buyCredits(750)">Buy Now</button>
+  </div>
 
   <div class="card">
     <h2>1000 Credits</h2>
@@ -89,6 +100,21 @@
 
 </div>
 
+<!-- SEARCH SCRIPT -->
+<script>
+function filterProducts() {
+  const input = document.getElementById("search").value.toLowerCase();
+  const cards = document.querySelectorAll(".card");
+
+  cards.forEach(card => {
+    const text = card.innerText.toLowerCase();
+    card.style.display = text.includes(input) ? "block" : "none";
+  });
+}
+</script>
+
+<!-- MAIN STORE SCRIPT -->
 <script src="script.js"></script>
+
 </body>
 </html>
