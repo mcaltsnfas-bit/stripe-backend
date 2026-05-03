@@ -2,126 +2,670 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Admin Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MCALTS Admin Dashboard</title>
+
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: Arial;
-      background: #0f0f0f;
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(109, 92, 255, 0.20), transparent 34%),
+        radial-gradient(circle at bottom right, rgba(0, 255, 170, 0.08), transparent 28%),
+        #07070c;
       color: white;
-      padding: 20px;
+      min-height: 100vh;
     }
 
-    h1 {
-      color: #00ff88;
+    button,
+    input,
+    select {
+      font-family: inherit;
     }
 
-    input, button {
-      padding: 10px;
-      margin: 5px;
+    .hidden {
+      display: none !important;
     }
 
-    button {
+    /* LOGIN */
+    .login-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 430px;
+      background: rgba(10, 10, 18, 0.92);
+      border: 1px solid rgba(128, 116, 255, 0.35);
+      border-radius: 24px;
+      padding: 34px;
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(16px);
+    }
+
+    .login-logo {
+      width: 68px;
+      height: 68px;
+      border-radius: 16px;
+      object-fit: contain;
+      display: block;
+      margin-bottom: 18px;
+      filter: drop-shadow(0 0 18px rgba(109, 92, 255, 0.45));
+    }
+
+    .login-card h1 {
+      margin: 0;
+      font-size: 34px;
+      font-weight: 900;
+    }
+
+    .login-card p {
+      margin: 10px 0 24px;
+      color: rgba(255,255,255,0.64);
+      line-height: 1.5;
+    }
+
+    .input {
+      width: 100%;
+      height: 52px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.045);
+      color: white;
+      padding: 0 16px;
+      outline: none;
+      font-size: 15px;
+      margin-bottom: 12px;
+    }
+
+    .input:focus {
+      border-color: rgba(109, 92, 255, 0.75);
+      box-shadow: 0 0 0 4px rgba(109, 92, 255, 0.12);
+    }
+
+    .primary-btn {
+      width: 100%;
+      height: 52px;
+      border: none;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #7967ff, #5d4bff);
+      color: white;
+      font-size: 15px;
+      font-weight: 800;
       cursor: pointer;
+      transition: 0.2s ease;
     }
 
-    .key {
-      background: #1c1c1c;
-      padding: 12px;
-      margin-bottom: 10px;
-      border-radius: 8px;
-    }
-
-    .credits {
-      color: #00ff88;
-      font-weight: bold;
-    }
-
-    .used {
-      color: red;
-    }
-
-    .unused {
-      color: #00ff88;
+    .primary-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 14px 28px rgba(92, 74, 255, 0.36);
     }
 
     .error {
-      color: red;
+      color: #ff6b6b;
+      font-size: 14px;
+      margin-top: 12px;
+      min-height: 20px;
+    }
+
+    /* DASHBOARD */
+    .dashboard {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      background: rgba(8, 8, 14, 0.86);
+      border-right: 1px solid rgba(255,255,255,0.07);
+      padding: 24px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 32px;
+    }
+
+    .brand img {
+      width: 50px;
+      height: 50px;
+      object-fit: contain;
+      border-radius: 12px;
+      filter: drop-shadow(0 0 14px rgba(109, 92, 255, 0.4));
+    }
+
+    .brand strong {
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: 1px;
+    }
+
+    .brand span {
+      display: block;
+      color: rgba(255,255,255,0.5);
+      font-size: 12px;
+      margin-top: 3px;
+    }
+
+    .side-link {
+      width: 100%;
+      height: 46px;
+      border: none;
+      border-radius: 12px;
+      color: rgba(255,255,255,0.72);
+      background: transparent;
+      text-align: left;
+      padding: 0 14px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 14px;
+      margin-bottom: 8px;
+      transition: 0.18s ease;
+    }
+
+    .side-link:hover,
+    .side-link.active {
+      background: rgba(109, 92, 255, 0.14);
+      color: white;
+    }
+
+    .logout-btn {
+      position: absolute;
+      bottom: 24px;
+      left: 24px;
+      right: 24px;
+      height: 46px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 99, 99, 0.34);
+      color: #ff9d9d;
+      background: rgba(255, 99, 99, 0.08);
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .main {
+      padding: 32px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: center;
+      margin-bottom: 28px;
+    }
+
+    .topbar h1 {
+      margin: 0;
+      font-size: 34px;
+      font-weight: 900;
+    }
+
+    .topbar p {
+      margin: 6px 0 0;
+      color: rgba(255,255,255,0.58);
+    }
+
+    .refresh-btn {
+      height: 46px;
+      border-radius: 12px;
+      border: 1px solid rgba(128, 116, 255, 0.45);
+      background: rgba(109, 92, 255, 0.10);
+      color: #d4ceff;
+      font-weight: 800;
+      padding: 0 18px;
+      cursor: pointer;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(160px, 1fr));
+      gap: 18px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: rgba(10, 10, 18, 0.86);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 20px;
+      padding: 20px;
+    }
+
+    .stat-card span {
+      color: rgba(255,255,255,0.55);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .stat-card h2 {
+      margin: 8px 0 0;
+      font-size: 30px;
+      font-weight: 900;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 420px 1fr;
+      gap: 22px;
+    }
+
+    .panel {
+      background: rgba(10, 10, 18, 0.86);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 22px;
+      padding: 22px;
+      box-shadow: 0 18px 50px rgba(0,0,0,0.20);
+    }
+
+    .panel h3 {
+      margin: 0 0 16px;
+      font-size: 21px;
+      font-weight: 900;
+    }
+
+    .form-row {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .form-row label {
+      color: rgba(255,255,255,0.6);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .small-btn {
+      height: 44px;
+      border-radius: 12px;
+      border: none;
+      background: linear-gradient(135deg, #7967ff, #5d4bff);
+      color: white;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .danger-btn {
+      background: linear-gradient(135deg, #ff5a6d, #e93b4f);
+    }
+
+    .success-btn {
+      background: linear-gradient(135deg, #2ecc71, #1fbd64);
+    }
+
+    .result-box {
+      display: none;
+      background: rgba(109, 92, 255, 0.12);
+      border: 1px solid rgba(109, 92, 255, 0.35);
+      border-radius: 14px;
+      padding: 14px;
+      margin-top: 14px;
+      word-break: break-all;
+      color: #dcd8ff;
+      font-weight: 700;
+    }
+
+    .table-tools {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .table-tools input {
+      margin: 0;
+    }
+
+    .keys-list {
+      display: grid;
+      gap: 12px;
+      max-height: 650px;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .key-card {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 14px;
+      align-items: center;
+      background: rgba(255,255,255,0.035);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      padding: 16px;
+    }
+
+    .key-code {
+      font-weight: 900;
+      letter-spacing: 0.4px;
+      word-break: break-all;
+    }
+
+    .key-meta {
+      margin-top: 8px;
+      color: rgba(255,255,255,0.55);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .pill {
+      display: inline-flex;
+      padding: 7px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .pill.used {
+      background: rgba(255, 88, 88, 0.12);
+      color: #ff8f8f;
+      border: 1px solid rgba(255, 88, 88, 0.24);
+    }
+
+    .pill.unused {
+      background: rgba(46, 204, 113, 0.12);
+      color: #77f0aa;
+      border: 1px solid rgba(46, 204, 113, 0.24);
+    }
+
+    .copy-btn {
+      height: 38px;
+      border-radius: 10px;
+      border: 1px solid rgba(128,116,255,0.35);
+      background: rgba(109, 92, 255, 0.10);
+      color: #d4ceff;
+      font-weight: 800;
+      padding: 0 12px;
+      cursor: pointer;
       margin-top: 10px;
     }
 
-    #dashboard {
+    .notice {
+      position: fixed;
+      right: 22px;
+      bottom: 22px;
+      padding: 14px 18px;
+      border-radius: 14px;
+      background: rgba(10, 10, 18, 0.96);
+      border: 1px solid rgba(109, 92, 255, 0.35);
+      color: white;
+      box-shadow: 0 18px 45px rgba(0,0,0,0.35);
       display: none;
+      z-index: 9999;
     }
 
-    .admin-actions {
-      margin: 15px 0;
+    @media (max-width: 1050px) {
+      .dashboard {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: relative;
+        height: auto;
+      }
+
+      .logout-btn {
+        position: static;
+        width: 100%;
+        margin-top: 18px;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .stats {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 560px) {
+      .main {
+        padding: 18px;
+      }
+
+      .stats {
+        grid-template-columns: 1fr;
+      }
+
+      .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .key-card {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
 
 <body>
 
-<!-- ---------------- LOGIN ---------------- -->
-<div id="loginBox">
-  <h1>🔐 Admin Login</h1>
+  <!-- LOGIN -->
+  <div id="loginBox" class="login-page">
+    <div class="login-card">
+      <img src="/logo.png" alt="MCALTS Logo" class="login-logo">
+      <h1>Admin Login</h1>
+      <p>Manage keys, credits, and customer redemptions from your MCALTS dashboard.</p>
 
-  <input type="password" id="password" placeholder="Enter password" />
-  <button onclick="login()">Login</button>
+      <input class="input" type="password" id="password" placeholder="Enter admin password">
+      <button class="primary-btn" onclick="login()">Login</button>
 
-  <p id="loginError" class="error"></p>
-</div>
-
-<!-- ---------------- DASHBOARD ---------------- -->
-<div id="dashboard">
-  <h1>🔐 Admin Dashboard</h1>
-  <p>All purchased keys:</p>
-
-  <button onclick="logout()">Logout</button>
-
-  <!-- ADMIN ACTIONS -->
-  <div class="admin-actions">
-    <button onclick="removeCredits()">❌ Remove Credits</button>
+      <div id="loginError" class="error"></div>
+    </div>
   </div>
 
-  <div id="keys">Loading...</div>
-  <div id="error" class="error"></div>
-</div>
+  <!-- DASHBOARD -->
+  <div id="dashboard" class="dashboard hidden">
+
+    <aside class="sidebar">
+      <div class="brand">
+        <img src="/logo.png" alt="MCALTS">
+        <div>
+          <strong>MCALTS</strong>
+          <span>Admin Panel</span>
+        </div>
+      </div>
+
+      <button class="side-link active" onclick="scrollToPanel('overview')">Overview</button>
+      <button class="side-link" onclick="scrollToPanel('generate')">Generate Key</button>
+      <button class="side-link" onclick="scrollToPanel('credits')">Credits</button>
+      <button class="side-link" onclick="scrollToPanel('keysPanel')">Keys</button>
+
+      <button class="logout-btn" onclick="logout()">Logout</button>
+    </aside>
+
+    <main class="main">
+      <div class="topbar" id="overview">
+        <div>
+          <h1>Admin Dashboard</h1>
+          <p>Manage your store, generated keys, and user credits.</p>
+        </div>
+
+        <button class="refresh-btn" onclick="loadKeys()">Refresh</button>
+      </div>
+
+      <section class="stats">
+        <div class="stat-card">
+          <span>Total Keys</span>
+          <h2 id="totalKeys">0</h2>
+        </div>
+
+        <div class="stat-card">
+          <span>Unused Keys</span>
+          <h2 id="unusedKeys">0</h2>
+        </div>
+
+        <div class="stat-card">
+          <span>Used Keys</span>
+          <h2 id="usedKeys">0</h2>
+        </div>
+
+        <div class="stat-card">
+          <span>Total Credits</span>
+          <h2 id="totalCredits">0</h2>
+        </div>
+      </section>
+
+      <section class="grid">
+
+        <!-- LEFT PANELS -->
+        <div>
+          <div class="panel" id="generate">
+            <h3>Generate Key</h3>
+
+            <div class="form-row">
+              <label>Credits</label>
+              <input class="input" type="number" id="generateCredits" placeholder="Example: 100">
+            </div>
+
+            <button class="small-btn" onclick="generateKey()">Generate Key</button>
+
+            <div id="generatedResult" class="result-box"></div>
+          </div>
+
+          <br>
+
+          <div class="panel" id="credits">
+            <h3>Add Credits</h3>
+
+            <div class="form-row">
+              <label>User ID</label>
+              <input class="input" type="text" id="addUserId" placeholder="Discord user ID">
+            </div>
+
+            <div class="form-row">
+              <label>Amount</label>
+              <input class="input" type="number" id="addAmount" placeholder="Credits to add">
+            </div>
+
+            <button class="small-btn success-btn" onclick="addCredits()">Add Credits</button>
+
+            <hr style="border-color: rgba(255,255,255,0.07); margin: 22px 0;">
+
+            <h3>Remove Credits</h3>
+
+            <div class="form-row">
+              <label>User ID</label>
+              <input class="input" type="text" id="removeUserId" placeholder="Discord user ID">
+            </div>
+
+            <div class="form-row">
+              <label>Amount</label>
+              <input class="input" type="number" id="removeAmount" placeholder="Credits to remove">
+            </div>
+
+            <button class="small-btn danger-btn" onclick="removeCredits()">Remove Credits</button>
+          </div>
+        </div>
+
+        <!-- KEYS PANEL -->
+        <div class="panel" id="keysPanel">
+          <h3>Recent Keys</h3>
+
+          <div class="table-tools">
+            <input class="input" id="keySearch" placeholder="Search keys..." onkeyup="renderKeys()">
+          </div>
+
+          <div id="keys" class="keys-list">Loading...</div>
+          <div id="error" class="error"></div>
+        </div>
+
+      </section>
+    </main>
+  </div>
+
+  <div id="notice" class="notice"></div>
 
 <script>
+  let allKeys = [];
+
+  function showNotice(message) {
+    const notice = document.getElementById("notice");
+    notice.innerText = message;
+    notice.style.display = "block";
+
+    setTimeout(() => {
+      notice.style.display = "none";
+    }, 2500);
+  }
+
+  function getToken() {
+    return localStorage.getItem("admin_token");
+  }
+
+  function scrollToPanel(id) {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+
+    document.querySelectorAll(".side-link").forEach(btn => {
+      btn.classList.remove("active");
+    });
+
+    event.target.classList.add("active");
+  }
+
   // ---------------- LOGIN ----------------
   async function login() {
     const password = document.getElementById("password").value;
+    const loginError = document.getElementById("loginError");
 
-    const res = await fetch("/admin/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password })
-    });
+    loginError.innerText = "";
 
-    const data = await res.json();
+    try {
+      const res = await fetch("/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password })
+      });
 
-    if (!res.ok) {
-      document.getElementById("loginError").innerText = "❌ Wrong password";
-      return;
+      const data = await res.json();
+
+      if (!res.ok || !data.token) {
+        loginError.innerText = "Wrong password";
+        return;
+      }
+
+      localStorage.setItem("admin_token", data.token);
+      showDashboard();
+      loadKeys();
+
+    } catch (err) {
+      loginError.innerText = "Server error";
     }
+  }
 
-    localStorage.setItem("admin_token", data.token);
-
-    document.getElementById("loginBox").style.display = "none";
-    document.getElementById("dashboard").style.display = "block";
-
-    loadKeys();
+  function showDashboard() {
+    document.getElementById("loginBox").classList.add("hidden");
+    document.getElementById("dashboard").classList.remove("hidden");
   }
 
   // ---------------- LOAD KEYS ----------------
   async function loadKeys() {
     try {
-      const token = localStorage.getItem("admin_token");
-
       const res = await fetch("/admin/keys", {
         headers: {
-          "x-admin-token": token
+          "x-admin-token": getToken()
         }
       });
 
@@ -129,28 +673,9 @@
         throw new Error("Unauthorized or server error");
       }
 
-      const data = await res.json();
-
-      const container = document.getElementById("keys");
-      container.innerHTML = "";
-
-      data.forEach(k => {
-        const div = document.createElement("div");
-        div.className = "key";
-
-        div.innerHTML = `
-          <div>🔑 <b>${k.key}</b></div>
-          <div class="credits">${k.credits} credits</div>
-          <div>Status: <span class="${k.used ? "used" : "unused"}">
-            ${k.used ? "USED" : "NOT USED"}
-          </span></div>
-          <div style="opacity:0.5;font-size:12px">
-            ${new Date(k.createdAt).toLocaleString()}
-          </div>
-        `;
-
-        container.appendChild(div);
-      });
+      allKeys = await res.json();
+      updateStats();
+      renderKeys();
 
     } catch (err) {
       document.getElementById("error").innerText =
@@ -158,33 +683,158 @@
     }
   }
 
+  function updateStats() {
+    const total = allKeys.length;
+    const used = allKeys.filter(k => k.used).length;
+    const unused = total - used;
+    const credits = allKeys.reduce((sum, k) => sum + Number(k.credits || 0), 0);
+
+    document.getElementById("totalKeys").innerText = total;
+    document.getElementById("usedKeys").innerText = used;
+    document.getElementById("unusedKeys").innerText = unused;
+    document.getElementById("totalCredits").innerText = credits;
+  }
+
+  function renderKeys() {
+    const container = document.getElementById("keys");
+    const query = document.getElementById("keySearch")?.value.toLowerCase() || "";
+
+    const filtered = allKeys.filter(k => {
+      return JSON.stringify(k).toLowerCase().includes(query);
+    });
+
+    container.innerHTML = "";
+
+    if (!filtered.length) {
+      container.innerHTML = "<p style='color:rgba(255,255,255,0.55)'>No keys found.</p>";
+      return;
+    }
+
+    filtered.forEach(k => {
+      const div = document.createElement("div");
+      div.className = "key-card";
+
+      div.innerHTML = `
+        <div>
+          <div class="key-code">🔑 ${k.key}</div>
+          <div class="key-meta">
+            ${k.credits} credits<br>
+            ${k.createdAt ? new Date(k.createdAt).toLocaleString() : "No date"}
+          </div>
+          <button class="copy-btn" onclick="copyText('${k.key}')">Copy Key</button>
+        </div>
+
+        <div>
+          <span class="pill ${k.used ? "used" : "unused"}">
+            ${k.used ? "USED" : "UNUSED"}
+          </span>
+        </div>
+      `;
+
+      container.appendChild(div);
+    });
+  }
+
+  function copyText(text) {
+    navigator.clipboard.writeText(text);
+    showNotice("Copied key");
+  }
+
+  // ---------------- GENERATE KEY ----------------
+  async function generateKey() {
+    const credits = Number(document.getElementById("generateCredits").value);
+
+    if (!credits || credits <= 0) {
+      showNotice("Enter a valid credit amount");
+      return;
+    }
+
+    const res = await fetch("/admin/generate-key", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-admin-token": getToken()
+      },
+      body: JSON.stringify({ credits })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || data.error) {
+      showNotice(data.error || "Failed to generate key");
+      return;
+    }
+
+    const box = document.getElementById("generatedResult");
+    box.style.display = "block";
+    box.innerHTML = `
+      Generated Key:<br>
+      ${data.key}<br><br>
+      Credits: ${data.credits}
+      <br><br>
+      <button class="copy-btn" onclick="copyText('${data.key}')">Copy Key</button>
+    `;
+
+    showNotice("Key generated");
+    loadKeys();
+  }
+
+  // ---------------- ADD CREDITS ----------------
+  async function addCredits() {
+    const userId = document.getElementById("addUserId").value.trim();
+    const amount = Number(document.getElementById("addAmount").value);
+
+    if (!userId || !amount || amount <= 0) {
+      showNotice("Enter valid user ID and amount");
+      return;
+    }
+
+    const res = await fetch("/admin/add-credits", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-admin-token": getToken()
+      },
+      body: JSON.stringify({ userId, amount })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || data.error) {
+      showNotice(data.error || "Failed to add credits");
+      return;
+    }
+
+    showNotice("Credits added");
+  }
+
   // ---------------- REMOVE CREDITS ----------------
   async function removeCredits() {
-    const userId = prompt("Enter userId:");
-    const amount = prompt("Enter amount to remove:");
+    const userId = document.getElementById("removeUserId").value.trim();
+    const amount = Number(document.getElementById("removeAmount").value);
 
-    if (!userId || !amount) return;
+    if (!userId || !amount || amount <= 0) {
+      showNotice("Enter valid user ID and amount");
+      return;
+    }
 
     const res = await fetch("/admin/remove-credits", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-admin-token": localStorage.getItem("admin_token")
+        "x-admin-token": getToken()
       },
-      body: JSON.stringify({
-        userId,
-        amount
-      })
+      body: JSON.stringify({ userId, amount })
     });
 
     const data = await res.json();
 
-    if (!res.ok) {
-      alert("Error: " + data.error);
+    if (!res.ok || data.error) {
+      showNotice(data.error || "Failed to remove credits");
       return;
     }
 
-    alert(data.message);
+    showNotice("Credits removed");
   }
 
   // ---------------- LOGOUT ----------------
@@ -194,9 +844,8 @@
   }
 
   // ---------------- AUTO LOGIN ----------------
-  if (localStorage.getItem("admin_token")) {
-    document.getElementById("loginBox").style.display = "none";
-    document.getElementById("dashboard").style.display = "block";
+  if (getToken()) {
+    showDashboard();
     loadKeys();
   }
 </script>
