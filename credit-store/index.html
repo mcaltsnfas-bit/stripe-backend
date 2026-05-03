@@ -3,167 +3,210 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MCALTS | Premium Store</title>
+  <title>MCALTS Store</title>
 
-  <!-- Favicon -->
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
 
-  <!-- SEO -->
-  <meta name="description" content="MCALTS Premium Minecraft Alt Store - Instant delivery, secure payments, trusted products.">
-  <meta name="theme-color" content="#5865F2">
+  <meta name="description" content="Buy MCALTS credits instantly with secure payments and instant redeem keys.">
+  <meta name="theme-color" content="#6d5cff">
 
-  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <!-- CSS -->
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<!-- NAVBAR -->
-<header class="navbar">
-  <div class="nav-left">
-    <div class="logo-box">⚡</div>
-    <div class="logo-text">MCALTS</div>
-  </div>
-
-  <nav class="nav-links">
-    <a href="#">Home</a>
-    <a href="#product-list">Products</a>
-    <a href="#reviews">Reviews</a>
-    <a href="#faq">FAQ</a>
-  </nav>
-
-  <div class="nav-right">
-    <select id="currency">
-      <option>£ GBP</option>
-    </select>
-
-    <a href="https://discord.gg/PDJJK2byVP" target="_blank" class="login-btn">Discord</a>
-
-    <div class="cart">🛒</div>
-  </div>
-</header>
-
-<!-- HERO -->
-<section class="hero">
-  <div class="hero-overlay"></div>
-
-  <div class="hero-content">
-    <h1>Premium Minecraft Alt Shop</h1>
-    <p>Secure checkout • Instant delivery • Trusted by buyers</p>
-
-    <!-- SEARCH -->
-    <div class="search-bar">
-      <input id="search" type="text" placeholder="Search for products..." onkeyup="filterProducts()">
-    </div>
-  </div>
-</section>
-
-<!-- SHOP SECTION -->
-<section class="shop-section">
-  <h2>Shop</h2>
-
-  <div class="products" id="product-list">
-
-    <div class="card">
-      <div class="stock in-stock">In Stock</div>
-      <h3>100 Credits</h3>
-      <p>Starter package</p>
-      <div class="price">£1.00</div>
-      <button onclick="buyCredits(100)">Buy Now</button>
+  <!-- NAVBAR -->
+  <header class="navbar">
+    <div class="nav-left">
+      <div class="brand-icon">M</div>
+      <div class="brand-text">MCALTS</div>
     </div>
 
-    <div class="card">
-      <div class="stock in-stock">In Stock</div>
-      <h3>200 Credits</h3>
-      <p>Popular starter</p>
-      <div class="price">£1.80</div>
-      <button onclick="buyCredits(200)">Buy Now</button>
+    <nav class="nav-links">
+      <a href="#top">Home</a>
+      <a href="#products">Products</a>
+      <a href="#reviews">Reviews</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+
+    <div class="nav-right">
+      <a class="discord-btn" href="https://discord.gg/PDJJK2byVP" target="_blank" rel="noopener noreferrer">
+        Discord
+      </a>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero" id="top">
+    <div class="hero-overlay"></div>
+
+    <div class="hero-content">
+      <p class="hero-small">Premium Store</p>
+      <h1>Welcome to MCALTS</h1>
+      <p class="hero-sub">
+        Fast delivery • Secure checkout • Instant redeem keys
+      </p>
+
+      <div class="search-wrap">
+        <input
+          id="search"
+          type="text"
+          placeholder="Search for products..."
+          onkeyup="filterProducts()"
+        >
+      </div>
+    </div>
+  </section>
+
+  <!-- SHOP -->
+  <section class="shop-section" id="products">
+    <div class="section-header">
+      <h2>Shop</h2>
+      <p>Choose the credit package that fits you best.</p>
     </div>
 
-    <div class="card featured">
-      <div class="stock best-value">Best Value</div>
-      <h3>500 Credits</h3>
-      <p>Most purchased</p>
-      <div class="price">£4.50</div>
-      <button onclick="buyCredits(500)">Buy Now</button>
+    <div class="products" id="product-list">
+
+      <div class="card">
+        <div class="badge in-stock">In Stock</div>
+        <div class="card-icon">⚡</div>
+        <div class="card-price">£1.00</div>
+        <h3>100 Credits</h3>
+        <p>Instant redeem key</p>
+        <button onclick="buyCredits(100)">Buy Now</button>
+      </div>
+
+      <div class="card">
+        <div class="badge in-stock">In Stock</div>
+        <div class="card-icon">📦</div>
+        <div class="card-price">£1.80</div>
+        <h3>200 Credits</h3>
+        <p>Starter pack</p>
+        <button onclick="buyCredits(200)">Buy Now</button>
+      </div>
+
+      <div class="card">
+        <div class="badge in-stock">In Stock</div>
+        <div class="card-icon">💎</div>
+        <div class="card-price">£2.70</div>
+        <h3>300 Credits</h3>
+        <p>Value pack</p>
+        <button onclick="buyCredits(300)">Buy Now</button>
+      </div>
+
+      <div class="card">
+        <div class="badge in-stock">In Stock</div>
+        <div class="card-icon">🔥</div>
+        <div class="card-price">£3.60</div>
+        <h3>400 Credits</h3>
+        <p>Boost pack</p>
+        <button onclick="buyCredits(400)">Buy Now</button>
+      </div>
+
+      <div class="card featured">
+        <div class="badge best-value">Best Value</div>
+        <div class="card-icon">⭐</div>
+        <div class="card-price">£4.50</div>
+        <h3>500 Credits</h3>
+        <p>Best value bundle</p>
+        <button onclick="buyCredits(500)">Buy Now</button>
+      </div>
+
+      <div class="card">
+        <div class="badge premium">Premium</div>
+        <div class="card-icon">🚀</div>
+        <div class="card-price">£6.50</div>
+        <h3>750 Credits</h3>
+        <p>Premium bundle</p>
+        <button onclick="buyCredits(750)">Buy Now</button>
+      </div>
+
+      <div class="card">
+        <div class="badge premium">Premium</div>
+        <div class="card-icon">👑</div>
+        <div class="card-price">£8.00</div>
+        <h3>1000 Credits</h3>
+        <p>Ultimate premium pack</p>
+        <button onclick="buyCredits(1000)">Buy Now</button>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- REVIEWS -->
+  <section class="reviews-section" id="reviews">
+    <div class="section-header">
+      <h2>Reviews</h2>
+      <p>Trusted by our customers.</p>
     </div>
 
-    <div class="card">
-      <div class="stock premium">Premium</div>
-      <h3>1000 Credits</h3>
-      <p>Maximum savings</p>
-      <div class="price">£8.00</div>
-      <button onclick="buyCredits(1000)">Buy Now</button>
+    <div class="reviews-grid">
+      <div class="review-card">
+        <div class="stars">★★★★★</div>
+        <p>"Fast delivery and really easy to use."</p>
+        <span>- Customer</span>
+      </div>
+
+      <div class="review-card">
+        <div class="stars">★★★★★</div>
+        <p>"Best site layout and instant key delivery."</p>
+        <span>- Customer</span>
+      </div>
+
+      <div class="review-card">
+        <div class="stars">★★★★★</div>
+        <p>"Bought credits and got my key instantly."</p>
+        <span>- Customer</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="faq-section" id="faq">
+    <div class="section-header">
+      <h2>FAQ</h2>
+      <p>Common questions.</p>
     </div>
 
-    <div class="card">
-      <div class="stock in-stock">In Stock</div>
-      <h3>300 Credits</h3>
-      <p>Value package</p>
-      <div class="price">£2.70</div>
-      <button onclick="buyCredits(300)">Buy Now</button>
+    <div class="faq-list">
+      <div class="faq-item">
+        <h4>How do I receive my credits?</h4>
+        <p>After payment, you receive a redeem key on the success page.</p>
+      </div>
+
+      <div class="faq-item">
+        <h4>How do I redeem the key?</h4>
+        <p>Use the /redeem command in your Discord server with your purchased key.</p>
+      </div>
+
+      <div class="faq-item">
+        <h4>Need help?</h4>
+        <p>Join our Discord server for support and updates.</p>
+      </div>
     </div>
+  </section>
 
-    <div class="card">
-      <div class="stock in-stock">In Stock</div>
-      <h3>400 Credits</h3>
-      <p>Boost package</p>
-      <div class="price">£3.60</div>
-      <button onclick="buyCredits(400)">Buy Now</button>
-    </div>
+  <!-- FOOTER -->
+  <footer class="footer">
+    <p>© 2026 MCALTS. All rights reserved.</p>
+  </footer>
 
-    <div class="card">
-      <div class="stock premium">Premium</div>
-      <h3>750 Credits</h3>
-      <p>Premium bundle</p>
-      <div class="price">£6.50</div>
-      <button onclick="buyCredits(750)">Buy Now</button>
-    </div>
+  <script>
+    function filterProducts() {
+      const input = document.getElementById("search").value.toLowerCase();
+      const cards = document.querySelectorAll(".card");
 
-  </div>
-</section>
+      cards.forEach(card => {
+        const text = card.innerText.toLowerCase();
+        card.style.display = text.includes(input) ? "" : "none";
+      });
+    }
+  </script>
 
-<!-- REVIEWS -->
-<section class="reviews" id="reviews">
-  <h2>Reviews</h2>
-  <p>Trusted checkout • Fast delivery • Premium quality</p>
-</section>
-
-<!-- FAQ -->
-<section class="faq" id="faq">
-  <h2>FAQ</h2>
-  <div class="faq-box">
-    <p><strong>How fast is delivery?</strong><br>Instant after payment.</p>
-    <p><strong>How do I redeem?</strong><br>Use your key in Discord with /redeem.</p>
-    <p><strong>Is checkout secure?</strong><br>Yes — Stripe protected payments.</p>
-  </div>
-</section>
-
-<!-- FOOTER -->
-<footer class="footer">
-  <p>© 2026 MCALTS — Premium Minecraft Digital Store</p>
-</footer>
-
-<!-- SEARCH -->
-<script>
-function filterProducts() {
-  const input = document.getElementById("search").value.toLowerCase();
-  const cards = document.querySelectorAll(".card");
-
-  cards.forEach(card => {
-    const text = card.innerText.toLowerCase();
-    card.style.display = text.includes(input) ? "block" : "none";
-  });
-}
-</script>
-
-<!-- MAIN SCRIPT -->
-<script src="script.js"></script>
-
+  <script src="script.js"></script>
 </body>
 </html>
