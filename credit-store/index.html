@@ -34,10 +34,15 @@
     </nav>
 
     <div class="nav-right">
-      <button class="currency-btn">£</button>
+      <select id="currency" class="currency-select">
+        <option value="GBP">£ GBP</option>
+        <option value="USD">$ USD</option>
+      </select>
+
       <a class="discord-btn" href="https://discord.gg/PDJJK2byVP" target="_blank" rel="noopener noreferrer">
         Discord
       </a>
+
       <button class="cart-btn">🛒</button>
     </div>
   </header>
@@ -77,7 +82,7 @@
 
         <div class="card-bottom">
           <div class="card-row">
-            <div class="card-price">£1.00</div>
+            <div class="card-price" data-gbp="1.00">£1.00</div>
             <div class="badge in-stock">● In Stock</div>
           </div>
 
@@ -93,7 +98,7 @@
 
         <div class="card-bottom">
           <div class="card-row">
-            <div class="card-price">£1.80</div>
+            <div class="card-price" data-gbp="1.80">£1.80</div>
             <div class="badge in-stock">● In Stock</div>
           </div>
 
@@ -109,7 +114,7 @@
 
         <div class="card-bottom">
           <div class="card-row">
-            <div class="card-price">£4.50</div>
+            <div class="card-price" data-gbp="4.50">£4.50</div>
             <div class="badge best-value">★ Best Value</div>
           </div>
 
@@ -125,7 +130,7 @@
 
         <div class="card-bottom">
           <div class="card-row">
-            <div class="card-price">£2.70</div>
+            <div class="card-price" data-gbp="2.70">£2.70</div>
             <div class="badge in-stock">● In Stock</div>
           </div>
 
@@ -141,7 +146,7 @@
 
         <div class="card-bottom">
           <div class="card-row">
-            <div class="card-price">£3.60</div>
+            <div class="card-price" data-gbp="3.60">£3.60</div>
             <div class="badge in-stock">● In Stock</div>
           </div>
 
@@ -157,7 +162,7 @@
 
         <div class="card-bottom">
           <div class="card-row">
-            <div class="card-price">£6.50</div>
+            <div class="card-price" data-gbp="6.50">£6.50</div>
             <div class="badge premium">Premium</div>
           </div>
 
@@ -173,7 +178,7 @@
 
         <div class="card-bottom">
           <div class="card-row">
-            <div class="card-price">£8.00</div>
+            <div class="card-price" data-gbp="8.00">£8.00</div>
             <div class="badge premium">Premium</div>
           </div>
 

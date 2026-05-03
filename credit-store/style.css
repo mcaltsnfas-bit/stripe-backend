@@ -85,7 +85,7 @@ body {
   min-width: 260px;
 }
 
-.currency-btn,
+.currency-select,
 .cart-btn,
 .discord-btn {
   height: 52px;
@@ -93,13 +93,31 @@ body {
   border: 1px solid rgba(128, 116, 255, 0.55);
   background: rgba(8, 8, 15, 0.7);
   color: #cfc9ff;
-  font-size: 18px;
-  font-weight: 700;
-  padding: 0 20px;
+  font-size: 16px;
+  font-weight: 800;
+  padding: 0 18px;
   display: flex;
   align-items: center;
   justify-content: center;
   text-decoration: none;
+  outline: none;
+  cursor: pointer;
+}
+
+.currency-select {
+  min-width: 100px;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, #cfc9ff 50%), linear-gradient(135deg, #cfc9ff 50%, transparent 50%);
+  background-position: calc(100% - 18px) 22px, calc(100% - 12px) 22px;
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+  padding-right: 36px;
+}
+
+.currency-select option {
+  background: #090910;
+  color: white;
 }
 
 .cart-btn {
@@ -107,14 +125,10 @@ body {
   padding: 0;
 }
 
-.currency-btn {
-  width: 80px;
-}
-
 .discord-btn:hover,
-.currency-btn:hover,
+.currency-select:hover,
 .cart-btn:hover {
-  background: rgba(109, 92, 255, 0.16);
+  background-color: rgba(109, 92, 255, 0.16);
   color: white;
 }
 
@@ -464,7 +478,7 @@ body {
     display: none;
   }
 
-  .currency-btn,
+  .currency-select,
   .cart-btn {
     display: none;
   }
