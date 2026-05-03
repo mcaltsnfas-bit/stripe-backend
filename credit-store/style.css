@@ -488,25 +488,25 @@ body::after {
     top: 10px;
     width: calc(100% - 24px);
     height: auto;
-    min-height: 72px;
-    padding: 10px 12px;
-    border-radius: 16px;
+    min-height: 68px;
+    padding: 9px 11px;
+    border-radius: 15px;
   }
 
   .nav-left {
     min-width: 0;
-    gap: 9px;
+    gap: 8px;
     flex: 1;
   }
 
   .site-logo {
-    width: 38px;
-    height: 38px;
+    width: 36px;
+    height: 36px;
   }
 
   .brand-text {
-    font-size: 18px;
-    letter-spacing: 0.8px;
+    font-size: 17px;
+    letter-spacing: 0.7px;
   }
 
   .nav-links {
@@ -525,49 +525,49 @@ body::after {
   }
 
   .discord-btn {
-    height: 38px;
+    height: 36px;
     padding: 0 10px;
-    font-size: 13px;
+    font-size: 12px;
     border-radius: 10px;
   }
 
   .hero {
-    min-height: 500px;
-    padding-top: 105px;
+    min-height: 430px;
+    padding-top: 95px;
   }
 
   .hero-content {
-    margin-top: -10px;
+    margin-top: -5px;
     padding: 0 18px;
   }
 
   .hero h1 {
-    font-size: 30px;
+    font-size: 28px;
     line-height: 1.08;
   }
 
   .search-wrap {
-    margin-top: 20px;
-    height: 52px;
-    max-width: 100%;
-    border-radius: 13px;
-    padding: 0 13px;
+    margin-top: 18px;
+    height: 48px;
+    max-width: 330px;
+    border-radius: 12px;
+    padding: 0 12px;
     gap: 8px;
   }
 
   .search-icon {
-    font-size: 26px;
+    font-size: 24px;
   }
 
   .search-wrap input {
-    font-size: 15px;
+    font-size: 14px;
   }
 
   .shop-section,
   .reviews-section,
   .faq-section {
-    margin-top: -45px;
-    padding: 0 14px 48px;
+    margin-top: -35px;
+    padding: 0 12px 42px;
   }
 
   .reviews-section,
@@ -577,30 +577,31 @@ body::after {
   }
 
   .section-header {
-    max-width: 390px;
-    margin-bottom: 16px;
+    max-width: 300px;
+    margin-bottom: 14px;
   }
 
   .section-header h2 {
-    font-size: 30px;
+    font-size: 28px;
   }
 
   .underline {
-    width: 54px;
+    width: 50px;
     height: 4px;
   }
 
   .products {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 16px;
-    max-width: 360px;
+    gap: 14px;
+    max-width: 285px;
   }
 
   .card {
     width: 100%;
-    min-height: auto;
-    border-radius: 17px;
+    min-height: 0;
+    border-radius: 15px;
+    box-shadow: 0 14px 28px rgba(0, 0, 0, 0.26);
   }
 
   .card:hover {
@@ -608,68 +609,69 @@ body::after {
   }
 
   .card-image {
-    height: 118px;
+    height: 82px;
   }
 
   .card-image img {
-    width: 66px;
-    height: 66px;
+    width: 48px;
+    height: 48px;
   }
 
   .card-bottom {
-    padding: 14px;
+    padding: 11px 12px 12px;
   }
 
   .card-row {
-    gap: 7px;
+    gap: 6px;
   }
 
   .card-price {
-    font-size: 18px;
+    font-size: 16px;
   }
 
   .badge {
-    font-size: 10px;
-    padding: 5px 8px;
+    font-size: 9px;
+    padding: 4px 6px;
+    border-radius: 7px;
   }
 
   .card h3 {
-    font-size: 21px;
-    margin: 12px 0 13px;
+    font-size: 18px;
+    margin: 9px 0 10px;
   }
 
   .payment-buttons {
     opacity: 1;
     transform: none;
-    max-height: 130px;
-    gap: 8px;
+    max-height: 95px;
+    gap: 6px;
   }
 
   .card button {
-    height: 40px;
-    font-size: 13px;
-    border-radius: 10px;
+    height: 34px;
+    font-size: 12px;
+    border-radius: 9px;
   }
 
   .reviews-grid {
     grid-template-columns: 1fr;
     gap: 14px;
-    max-width: 360px;
+    max-width: 300px;
   }
 
   .review-card,
   .faq-item {
-    padding: 16px;
-    border-radius: 15px;
+    padding: 15px;
+    border-radius: 14px;
   }
 
   .faq-list {
-    max-width: 360px;
+    max-width: 300px;
     gap: 14px;
   }
 
   .footer {
-    padding: 22px 16px 28px;
+    padding: 20px 16px 26px;
   }
 }
 
@@ -678,50 +680,65 @@ body::after {
   .navbar {
     width: calc(100% - 18px);
     top: 8px;
-    padding: 9px 10px;
+    padding: 8px 10px;
   }
 
   .site-logo {
-    width: 35px;
-    height: 35px;
+    width: 34px;
+    height: 34px;
   }
 
   .brand-text {
-    font-size: 17px;
+    font-size: 16px;
   }
 
   .discord-btn {
-    height: 36px;
+    height: 34px;
     font-size: 12px;
-    padding: 0 9px;
+    padding: 0 8px;
   }
 
   .hero {
-    min-height: 470px;
-    padding-top: 98px;
+    min-height: 410px;
+    padding-top: 88px;
   }
 
   .hero h1 {
-    font-size: 28px;
+    font-size: 26px;
   }
 
   .search-wrap {
-    height: 50px;
-    margin-top: 18px;
+    height: 46px;
+    margin-top: 16px;
+    max-width: 300px;
   }
 
   .products,
   .reviews-grid,
   .faq-list,
   .section-header {
-    max-width: 340px;
+    max-width: 275px;
   }
 
   .card-image {
-    height: 110px;
+    height: 76px;
+  }
+
+  .card-image img {
+    width: 44px;
+    height: 44px;
   }
 
   .card h3 {
-    font-size: 20px;
+    font-size: 17px;
+  }
+
+  .card-bottom {
+    padding: 10px 11px 11px;
+  }
+
+  .card button {
+    height: 32px;
+    font-size: 12px;
   }
 }
