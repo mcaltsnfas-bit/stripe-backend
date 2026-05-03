@@ -3,66 +3,123 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MCALTS Credit Store</title>
+  <title>MCALTS | Premium Credit Store</title>
 
-  <!-- FAVICON FIX -->
+  <!-- FAVICON -->
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
 
-  <!-- SEO / Social -->
-  <meta name="description" content="Buy MCALTS credits instantly with secure payments and instant redeem keys.">
-  <meta name="theme-color" content="#00ff88">
+  <!-- SEO -->
+  <meta name="description" content="Buy MCALTS credits instantly with secure payments, instant delivery, and premium Minecraft alt services.">
+  <meta name="theme-color" content="#7c5cff">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
 
   <!-- CSS -->
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
+<!-- BACKGROUND FX -->
+<div class="bg-glow glow1"></div>
+<div class="bg-glow glow2"></div>
+
 <!-- NAVBAR -->
-<div class="navbar">
+<header class="navbar">
   <div class="logo">⚡ MCALTS</div>
 
-  <div class="nav-links">
+  <nav class="nav-links">
     <a href="#">Home</a>
     <a href="#product-list">Products</a>
-  </div>
+    <a href="https://discord.gg/" target="_blank">Discord</a>
+  </nav>
 
   <div class="right">
     <select id="currency">
       <option>GBP</option>
     </select>
-
     <div class="cart">🛒 <span id="cart-count">0</span></div>
   </div>
-</div>
+</header>
 
 <!-- HERO -->
-<div class="hero">
-  <h1>Buy Credits Instantly ⚡</h1>
-  <p>Fast delivery • Secure payments • Instant redeem keys</p>
-</div>
+<section class="hero">
+  <div class="badge">TRUSTED DIGITAL STORE</div>
+  <h1>Premium Minecraft Alt Credits</h1>
+  <p>
+    Instant key delivery • Secure Stripe checkout • Trusted by customers • Fast automated system
+  </p>
+
+  <div class="hero-buttons">
+    <a href="#product-list" class="primary-btn">Buy Credits</a>
+    <a href="https://discord.gg/" target="_blank" class="secondary-btn">Join Discord</a>
+  </div>
+
+  <div class="stats">
+    <div class="stat-box">
+      <h3>24/7</h3>
+      <span>Automated Delivery</span>
+    </div>
+
+    <div class="stat-box">
+      <h3>Secure</h3>
+      <span>Stripe Payments</span>
+    </div>
+
+    <div class="stat-box">
+      <h3>Instant</h3>
+      <span>Redeem Keys</span>
+    </div>
+  </div>
+</section>
 
 <!-- SEARCH -->
-<div class="search">
-  <input id="search" type="text" placeholder="Search products..." onkeyup="filterProducts()">
-</div>
+<section class="search">
+  <input id="search" type="text" placeholder="Search credit packages..." onkeyup="filterProducts()">
+</section>
 
 <!-- PRODUCTS -->
-<div class="products" id="product-list">
+<section class="products" id="product-list">
 
   <div class="card">
+    <div class="popular-tag">STARTER</div>
     <h2>100 Credits</h2>
-    <p>Instant redeem key</p>
+    <p>Perfect entry package</p>
     <div class="price">£1.00</div>
     <button onclick="buyCredits(100)">Buy Now</button>
   </div>
 
   <div class="card">
+    <div class="popular-tag">POPULAR</div>
     <h2>200 Credits</h2>
-    <p>Starter pack</p>
+    <p>Starter value pack</p>
     <div class="price">£1.80</div>
     <button onclick="buyCredits(200)">Buy Now</button>
   </div>
+
+  <div class="card featured">
+    <div class="popular-tag best">BEST VALUE</div>
+    <h2>500 Credits</h2>
+    <p>Most purchased package</p>
+    <div class="price">£4.50</div>
+    <button onclick="buyCredits(500)">Buy Now</button>
+  </div>
+
+  <div class="card">
+    <div class="popular-tag">PREMIUM</div>
+    <h2>1000 Credits</h2>
+    <p>Maximum savings</p>
+    <div class="price">£8.00</div>
+    <button onclick="buyCredits(1000)">Buy Now</button>
+  </div>
+
+</section>
+
+<!-- EXTRA PRODUCTS -->
+<section class="products secondary-products">
 
   <div class="card">
     <h2>300 Credits</h2>
@@ -79,27 +136,18 @@
   </div>
 
   <div class="card">
-    <h2>500 Credits</h2>
-    <p>Best value</p>
-    <div class="price">£4.50</div>
-    <button onclick="buyCredits(500)">Buy Now</button>
-  </div>
-
-  <div class="card">
     <h2>750 Credits</h2>
     <p>Premium bundle</p>
     <div class="price">£6.50</div>
     <button onclick="buyCredits(750)">Buy Now</button>
   </div>
 
-  <div class="card">
-    <h2>1000 Credits</h2>
-    <p>Premium pack</p>
-    <div class="price">£8.00</div>
-    <button onclick="buyCredits(1000)">Buy Now</button>
-  </div>
+</section>
 
-</div>
+<!-- FOOTER -->
+<footer class="footer">
+  <p>© 2026 MCALTS — Secure Digital Products</p>
+</footer>
 
 <!-- SEARCH SCRIPT -->
 <script>
