@@ -38,7 +38,6 @@
       display: none !important;
     }
 
-    /* LOGIN */
     .login-page {
       min-height: 100vh;
       display: flex;
@@ -123,7 +122,6 @@
       min-height: 20px;
     }
 
-    /* DASHBOARD */
     .dashboard {
       display: grid;
       grid-template-columns: 280px 1fr;
@@ -400,6 +398,17 @@
       margin-top: 10px;
     }
 
+    .delete-key-btn {
+      border-color: rgba(255, 88, 88, 0.35);
+      background: rgba(255, 88, 88, 0.10);
+      color: #ff9d9d;
+      margin-left: 8px;
+    }
+
+    .delete-key-btn:hover {
+      background: rgba(255, 88, 88, 0.18);
+    }
+
     .notice {
       position: fixed;
       right: 22px;
@@ -455,6 +464,10 @@
 
       .key-card {
         grid-template-columns: 1fr;
+      }
+
+      .delete-key-btn {
+        margin-left: 0;
       }
     }
   </style>
@@ -773,6 +786,7 @@
             ${k.createdAt ? new Date(k.createdAt).toLocaleString() : "No date"}
           </div>
           <button class="copy-btn" onclick="copyText('${k.key}')">Copy Key</button>
+          <button class="copy-btn delete-key-btn" onclick="deleteKey('${k.key}')">Delete Key</button>
         </div>
 
         <div>
@@ -789,6 +803,42 @@
   function copyText(text) {
     navigator.clipboard.writeText(text);
     showNotice("Copied key");
+  }
+
+  // ---------------- DELETE KEY ----------------
+  async function deleteKey(key) {
+    const confirmDelete = confirm(`Are you sure you want to delete this key?\n\n${key}`);
+
+    if (!confirmDelete) return;
+
+    try {
+      const res = await fetch("/admin/delete-key", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-token": getToken()
+        },
+        body: JSON.stringify({ key })
+      });
+
+      const data = await res.json();
+
+      if (res.status === 403) {
+        handleExpiredSession();
+        return;
+      }
+
+      if (!res.ok || data.error) {
+        showNotice(data.error || "Failed to delete key");
+        return;
+      }
+
+      showNotice("Key deleted");
+      await loadKeys();
+
+    } catch (err) {
+      showNotice("Server error deleting key");
+    }
   }
 
   // ---------------- GENERATE KEY ----------------
@@ -829,6 +879,7 @@
       Credits: ${data.credits}
       <br><br>
       <button class="copy-btn" onclick="copyText('${data.key}')">Copy Key</button>
+      <button class="copy-btn delete-key-btn" onclick="deleteKey('${data.key}')">Delete Key</button>
     `;
 
     showNotice("Key generated");

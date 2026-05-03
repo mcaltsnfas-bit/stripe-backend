@@ -309,6 +309,37 @@ app.get("/admin/keys", async (req, res) => {
 });
 
 // --------------------
+// ADMIN: DELETE KEY
+// --------------------
+app.post("/admin/delete-key", async (req, res) => {
+  if (!checkAdmin(req, res)) return;
+  if (!checkDB(req, res)) return;
+
+  const { key } = req.body;
+
+  if (!key) {
+    return res.status(400).json({ error: "Missing key" });
+  }
+
+  const result = await keysCollection.deleteOne({ key: String(key) });
+
+  if (result.deletedCount === 0) {
+    return res.status(404).json({ error: "Key not found" });
+  }
+
+  await historyCollection.insertOne({
+    type: "admin_delete_key",
+    key: String(key),
+    createdAt: Date.now()
+  });
+
+  res.json({
+    success: true,
+    message: "Key deleted"
+  });
+});
+
+// --------------------
 // ADMIN: ADD CREDITS
 // --------------------
 app.post("/admin/add-credits", async (req, res) => {
