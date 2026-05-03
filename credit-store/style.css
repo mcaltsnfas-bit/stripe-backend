@@ -9,8 +9,16 @@ html {
 body {
   margin: 0;
   font-family: 'Inter', sans-serif;
-  background: #07070c;
   color: #ffffff;
+
+  background-image:
+    linear-gradient(to bottom, rgba(7, 7, 12, 0.15), rgba(7, 7, 12, 0.92)),
+    url("/hero-bg.jpg");
+
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
 /* NAVBAR */
@@ -141,10 +149,6 @@ body {
   align-items: center;
   justify-content: center;
   text-align: center;
-  background-image: url("/hero-bg.jpg");
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
 }
 
 .hero-overlay {
@@ -461,6 +465,10 @@ body {
 }
 
 @media (max-width: 820px) {
+  body {
+    background-attachment: scroll;
+  }
+
   .navbar {
     height: auto;
     min-height: 82px;
