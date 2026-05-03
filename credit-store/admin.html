@@ -261,6 +261,7 @@
       margin: 8px 0 0;
       font-size: 30px;
       font-weight: 900;
+      overflow-wrap: anywhere;
     }
 
     .grid {
@@ -487,10 +488,10 @@
         </div>
       </div>
 
-      <button class="side-link active" onclick="scrollToPanel('overview')">Overview</button>
-      <button class="side-link" onclick="scrollToPanel('generate')">Generate Key</button>
-      <button class="side-link" onclick="scrollToPanel('credits')">Credits</button>
-      <button class="side-link" onclick="scrollToPanel('keysPanel')">Keys</button>
+      <button class="side-link active" onclick="scrollToPanel(event, 'overview')">Overview</button>
+      <button class="side-link" onclick="scrollToPanel(event, 'generate')">Generate Key</button>
+      <button class="side-link" onclick="scrollToPanel(event, 'credits')">Credits</button>
+      <button class="side-link" onclick="scrollToPanel(event, 'keysPanel')">Keys</button>
 
       <button class="logout-btn" onclick="logout()">Logout</button>
     </aside>
@@ -502,7 +503,7 @@
           <p>Manage your store, generated keys, and user credits.</p>
         </div>
 
-        <button class="refresh-btn" onclick="loadKeys()">Refresh</button>
+        <button class="refresh-btn" onclick="refreshDashboard()">Refresh</button>
       </div>
 
       <section class="stats">
@@ -522,14 +523,13 @@
         </div>
 
         <div class="stat-card">
-          <span>Total Credits</span>
+          <span>Total Key Credits</span>
           <h2 id="totalCredits">0</h2>
         </div>
       </section>
 
       <section class="grid">
 
-        <!-- LEFT PANELS -->
         <div>
           <div class="panel" id="generate">
             <h3>Generate Key</h3>
@@ -579,7 +579,6 @@
           </div>
         </div>
 
-        <!-- KEYS PANEL -->
         <div class="panel" id="keysPanel">
           <h3>Recent Keys</h3>
 
@@ -599,6 +598,7 @@
 
 <script>
   let allKeys = [];
+  let isLoadingKeys = false;
 
   function showNotice(message) {
     const notice = document.getElementById("notice");
@@ -614,7 +614,14 @@
     return localStorage.getItem("admin_token");
   }
 
-  function scrollToPanel(id) {
+  function handleExpiredSession() {
+    localStorage.removeItem("admin_token");
+    document.getElementById("dashboard").classList.add("hidden");
+    document.getElementById("loginBox").classList.remove("hidden");
+    document.getElementById("loginError").innerText = "Session expired. Please log in again.";
+  }
+
+  function scrollToPanel(event, id) {
     const el = document.getElementById(id);
     if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
 
@@ -622,7 +629,27 @@
       btn.classList.remove("active");
     });
 
-    event.target.classList.add("active");
+    if (event?.target) {
+      event.target.classList.add("active");
+    }
+  }
+
+  async function refreshDashboard() {
+    const btn = document.querySelector(".refresh-btn");
+    const oldText = btn.innerText;
+
+    btn.innerText = "Refreshing...";
+    btn.disabled = true;
+
+    try {
+      await loadKeys();
+      showNotice("Dashboard refreshed");
+    } catch (err) {
+      showNotice("Refresh failed");
+    } finally {
+      btn.innerText = oldText;
+      btn.disabled = false;
+    }
   }
 
   // ---------------- LOGIN ----------------
@@ -648,7 +675,8 @@
 
       localStorage.setItem("admin_token", data.token);
       showDashboard();
-      loadKeys();
+      await loadKeys();
+      showNotice("Logged in");
 
     } catch (err) {
       loginError.innerText = "Server error";
@@ -662,15 +690,29 @@
 
   // ---------------- LOAD KEYS ----------------
   async function loadKeys() {
+    if (isLoadingKeys) return;
+    isLoadingKeys = true;
+
+    const errorBox = document.getElementById("error");
+    const container = document.getElementById("keys");
+
     try {
+      if (errorBox) errorBox.innerText = "";
+      if (container) container.innerHTML = "Loading...";
+
       const res = await fetch("/admin/keys", {
         headers: {
           "x-admin-token": getToken()
         }
       });
 
+      if (res.status === 403) {
+        handleExpiredSession();
+        throw new Error("Session expired");
+      }
+
       if (!res.ok) {
-        throw new Error("Unauthorized or server error");
+        throw new Error("Server error");
       }
 
       allKeys = await res.json();
@@ -678,8 +720,17 @@
       renderKeys();
 
     } catch (err) {
-      document.getElementById("error").innerText =
-        "Error loading keys: " + err.message;
+      if (errorBox) {
+        errorBox.innerText = "Error loading keys: " + err.message;
+      }
+
+      if (container) {
+        container.innerHTML = "<p style='color:rgba(255,255,255,0.55)'>Could not load keys.</p>";
+      }
+
+      throw err;
+    } finally {
+      isLoadingKeys = false;
     }
   }
 
@@ -689,10 +740,10 @@
     const unused = total - used;
     const credits = allKeys.reduce((sum, k) => sum + Number(k.credits || 0), 0);
 
-    document.getElementById("totalKeys").innerText = total;
-    document.getElementById("usedKeys").innerText = used;
-    document.getElementById("unusedKeys").innerText = unused;
-    document.getElementById("totalCredits").innerText = credits;
+    document.getElementById("totalKeys").innerText = total.toLocaleString();
+    document.getElementById("usedKeys").innerText = used.toLocaleString();
+    document.getElementById("unusedKeys").innerText = unused.toLocaleString();
+    document.getElementById("totalCredits").innerText = credits.toLocaleString();
   }
 
   function renderKeys() {
@@ -718,7 +769,7 @@
         <div>
           <div class="key-code">🔑 ${k.key}</div>
           <div class="key-meta">
-            ${k.credits} credits<br>
+            ${Number(k.credits || 0).toLocaleString()} credits<br>
             ${k.createdAt ? new Date(k.createdAt).toLocaleString() : "No date"}
           </div>
           <button class="copy-btn" onclick="copyText('${k.key}')">Copy Key</button>
@@ -760,6 +811,11 @@
 
     const data = await res.json();
 
+    if (res.status === 403) {
+      handleExpiredSession();
+      return;
+    }
+
     if (!res.ok || data.error) {
       showNotice(data.error || "Failed to generate key");
       return;
@@ -776,7 +832,7 @@
     `;
 
     showNotice("Key generated");
-    loadKeys();
+    await loadKeys();
   }
 
   // ---------------- ADD CREDITS ----------------
@@ -800,12 +856,18 @@
 
     const data = await res.json();
 
+    if (res.status === 403) {
+      handleExpiredSession();
+      return;
+    }
+
     if (!res.ok || data.error) {
       showNotice(data.error || "Failed to add credits");
       return;
     }
 
-    showNotice("Credits added");
+    showNotice(data.message || "Credits added");
+    await loadKeys();
   }
 
   // ---------------- REMOVE CREDITS ----------------
@@ -829,12 +891,18 @@
 
     const data = await res.json();
 
+    if (res.status === 403) {
+      handleExpiredSession();
+      return;
+    }
+
     if (!res.ok || data.error) {
       showNotice(data.error || "Failed to remove credits");
       return;
     }
 
-    showNotice("Credits removed");
+    showNotice(data.message || "Credits removed");
+    await loadKeys();
   }
 
   // ---------------- LOGOUT ----------------
@@ -846,7 +914,7 @@
   // ---------------- AUTO LOGIN ----------------
   if (getToken()) {
     showDashboard();
-    loadKeys();
+    loadKeys().catch(() => {});
   }
 </script>
 
