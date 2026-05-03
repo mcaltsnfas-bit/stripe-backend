@@ -249,12 +249,14 @@ body {
 .products {
   max-width: 1180px;
   margin: 0 auto;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(210px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 22px;
 }
 
 .card {
+  width: 270px;
   position: relative;
   background: rgba(7, 9, 17, 0.94);
   border: 1px solid rgba(132, 125, 255, 0.38);
@@ -455,8 +457,8 @@ body {
     gap: 20px;
   }
 
-  .products {
-    grid-template-columns: repeat(3, minmax(210px, 1fr));
+  .card {
+    width: 280px;
   }
 
   .reviews-grid {
@@ -508,7 +510,15 @@ body {
     padding-right: 18px;
   }
 
-  .products,
+  .products {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .card {
+    width: 100%;
+  }
+
   .reviews-grid {
     grid-template-columns: 1fr;
   }
