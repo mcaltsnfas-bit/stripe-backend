@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bank Payment Successful</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="icon" href="/favicon.ico" sizes="any">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(109, 92, 255, 0.20), transparent 34%),
+        #07070c;
+      color: white;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .box {
+      max-width: 520px;
+      width: 100%;
+      background: rgba(10, 10, 18, 0.92);
+      border: 1px solid rgba(128, 116, 255, 0.35);
+      border-radius: 24px;
+      padding: 34px;
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.45);
+    }
+
+    h1 {
+      margin-top: 0;
+      color: #77f0aa;
+    }
+
+    #key-box {
+      margin-top: 20px;
+      font-size: 18px;
+      word-break: break-word;
+      background: rgba(255,255,255,0.05);
+      padding: 16px;
+      border-radius: 14px;
+    }
+
+    button {
+      margin-top: 22px;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 18px;
+      background: linear-gradient(135deg, #7967ff, #5d4bff);
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="box">
+    <h1>✅ Bank Payment Complete</h1>
+    <p>Your payment is being checked. Your key will appear below.</p>
+
+    <div id="key-box">Checking payment...</div>
+
+    <button onclick="window.location.href='/'">Back to Store</button>
+  </div>
+
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const paymentId = params.get("payment_id");
+
+  async function checkPayment() {
+    const box = document.getElementById("key-box");
+
+    if (!paymentId) {
+      box.innerText = "Error: missing payment ID.";
+      return;
+    }
+
+    try {
+      const res = await fetch(`/get-gocardless-key-by-id?payment_id=${paymentId}`);
+      const data = await res.json();
+
+      console.log("BANK PAYMENT STATUS:", data);
+
+      if (data.key) {
+        box.innerText = `🎁 Your Key: ${data.key} (${data.credits} credits)`;
+        return;
+      }
+
+      box.innerText = `Payment status: ${data.status || "pending"}. Please wait a few seconds...`;
+
+      setTimeout(checkPayment, 4000);
+
+    } catch (err) {
+      console.error(err);
+      box.innerText = "Server error checking payment. Refresh in a few seconds.";
+    }
+  }
+
+  checkPayment();
+</script>
+
+</body>
+</html>

@@ -30,10 +30,11 @@ app.use(cors({
 }));
 
 // --------------------
-// STRIPE WEBHOOK RAW BODY
-// IMPORTANT: this must be BEFORE express.json()
+// RAW WEBHOOK BODIES
+// IMPORTANT: these must be BEFORE express.json()
 // --------------------
 app.use("/webhook", express.raw({ type: "application/json" }));
+app.use("/gocardless-webhook", express.raw({ type: "application/json" }));
 
 // --------------------
 // MIDDLEWARE
@@ -46,11 +47,35 @@ app.use(express.static("credit-store"));
 // --------------------
 const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI;
+
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
+
 const ADMIN_SECRET = process.env.ADMIN_SECRET;
 
+const GOCARDLESS_ACCESS_TOKEN = process.env.GOCARDLESS_ACCESS_TOKEN;
+const GOCARDLESS_WEBHOOK_SECRET = process.env.GOCARDLESS_WEBHOOK_SECRET;
+const GOCARDLESS_ENV = process.env.GOCARDLESS_ENV || "sandbox";
+
 const stripe = STRIPE_SECRET_KEY ? new Stripe(STRIPE_SECRET_KEY) : null;
+
+const GOCARDLESS_API =
+  GOCARDLESS_ENV === "live"
+    ? "https://api.gocardless.com"
+    : "https://api-sandbox.gocardless.com";
+
+// --------------------
+// PRICES IN PENCE
+// --------------------
+const priceMap = {
+  100: 100,
+  200: 190,
+  300: 280,
+  400: 395,
+  500: 475,
+  750: 675,
+  1000: 900
+};
 
 // --------------------
 // ADMIN SESSIONS
@@ -69,6 +94,7 @@ const client = new MongoClient(MONGO_URI || "");
 let keysCollection;
 let usersCollection;
 let historyCollection;
+let bankPaymentsCollection;
 
 async function connectDB() {
   try {
@@ -78,6 +104,7 @@ async function connectDB() {
     keysCollection = db.collection("keys");
     usersCollection = db.collection("users");
     historyCollection = db.collection("history");
+    bankPaymentsCollection = db.collection("bankPayments");
 
     console.log("Mongo connected 🚀");
   } catch (err) {
@@ -90,7 +117,7 @@ connectDB();
 // DB CHECK
 // --------------------
 function checkDB(req, res) {
-  if (!keysCollection || !usersCollection || !historyCollection) {
+  if (!keysCollection || !usersCollection || !historyCollection || !bankPaymentsCollection) {
     res.status(500).json({ error: "Database not ready" });
     return false;
   }
@@ -103,6 +130,144 @@ function checkDB(req, res) {
 // --------------------
 function generateKey() {
   return "KEY-" + Math.random().toString(36).substring(2, 10).toUpperCase();
+}
+
+// --------------------
+// GOCARDLESS API HELPER
+// --------------------
+async function gocardlessRequest(path, method = "GET", body = null) {
+  if (!GOCARDLESS_ACCESS_TOKEN) {
+    throw new Error("GoCardless not configured");
+  }
+
+  const options = {
+    method,
+    headers: {
+      Authorization: `Bearer ${GOCARDLESS_ACCESS_TOKEN}`,
+      "GoCardless-Version": "2015-07-06",
+      "Content-Type": "application/json"
+    }
+  };
+
+  if (body) {
+    options.body = JSON.stringify(body);
+  }
+
+  const res = await fetch(`${GOCARDLESS_API}${path}`, options);
+  const text = await res.text();
+
+  let data = {};
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch {
+    data = { raw: text };
+  }
+
+  if (!res.ok) {
+    console.log("GoCardless API error:", data);
+    throw new Error(data?.error?.message || data?.message || "GoCardless API error");
+  }
+
+  return data;
+}
+
+// --------------------
+// CREATE BANK KEY IF PAYMENT IS FULFILLED
+// --------------------
+async function createGoCardlessKeyIfPaid(localPaymentId) {
+  const paymentDoc = await bankPaymentsCollection.findOne({ localPaymentId });
+
+  if (!paymentDoc) {
+    return { status: "not_found" };
+  }
+
+  if (paymentDoc.key) {
+    return {
+      status: "paid",
+      key: paymentDoc.key,
+      credits: paymentDoc.credits
+    };
+  }
+
+  const br = await gocardlessRequest(`/billing_requests/${paymentDoc.billingRequestId}`);
+  const billingRequest = br.billing_requests;
+
+  if (!billingRequest || billingRequest.status !== "fulfilled") {
+    await bankPaymentsCollection.updateOne(
+      { localPaymentId },
+      {
+        $set: {
+          status: billingRequest?.status || "pending",
+          lastCheckedAt: Date.now()
+        }
+      }
+    );
+
+    return {
+      status: billingRequest?.status || "pending"
+    };
+  }
+
+  const existingKey = await keysCollection.findOne({
+    sessionId: `gocardless:${localPaymentId}`
+  });
+
+  if (existingKey) {
+    await bankPaymentsCollection.updateOne(
+      { localPaymentId },
+      {
+        $set: {
+          status: "paid",
+          key: existingKey.key,
+          paidAt: Date.now()
+        }
+      }
+    );
+
+    return {
+      status: "paid",
+      key: existingKey.key,
+      credits: existingKey.credits
+    };
+  }
+
+  const key = generateKey();
+
+  await keysCollection.insertOne({
+    key,
+    sessionId: `gocardless:${localPaymentId}`,
+    gocardlessBillingRequestId: paymentDoc.billingRequestId,
+    credits: Number(paymentDoc.credits),
+    used: false,
+    method: "gocardless",
+    createdAt: Date.now()
+  });
+
+  await bankPaymentsCollection.updateOne(
+    { localPaymentId },
+    {
+      $set: {
+        status: "paid",
+        key,
+        paidAt: Date.now()
+      }
+    }
+  );
+
+  await historyCollection.insertOne({
+    type: "gocardless_key_created",
+    localPaymentId,
+    billingRequestId: paymentDoc.billingRequestId,
+    key,
+    credits: Number(paymentDoc.credits),
+    createdAt: Date.now()
+  });
+
+  return {
+    status: "paid",
+    key,
+    credits: Number(paymentDoc.credits)
+  };
 }
 
 // --------------------
@@ -120,16 +285,6 @@ app.post("/create-checkout", async (req, res) => {
     if (!stripe) return res.status(500).json({ error: "Stripe not configured" });
 
     const { credits } = req.body;
-
-    const priceMap = {
-      100: 100,
-      200: 190,
-      300: 280,
-      400: 395,
-      500: 475,
-      750: 675,
-      1000: 900
-    };
 
     if (!priceMap[credits]) {
       return res.status(400).json({ error: "Invalid credit amount" });
@@ -165,7 +320,78 @@ app.post("/create-checkout", async (req, res) => {
 });
 
 // --------------------
-// WEBHOOK
+// GOCARDLESS CHECKOUT
+// --------------------
+app.post("/create-gocardless-checkout", async (req, res) => {
+  try {
+    if (!checkDB(req, res)) return;
+
+    if (!GOCARDLESS_ACCESS_TOKEN) {
+      return res.status(500).json({ error: "GoCardless not configured" });
+    }
+
+    const { credits } = req.body;
+
+    if (!priceMap[credits]) {
+      return res.status(400).json({ error: "Invalid credit amount" });
+    }
+
+    const amount = priceMap[credits];
+    const localPaymentId = crypto.randomBytes(18).toString("hex");
+
+    const billingRequestData = await gocardlessRequest("/billing_requests", "POST", {
+      billing_requests: {
+        payment_request: {
+          description: `${credits} MCALTS Credits`,
+          amount: String(amount),
+          currency: "GBP"
+        },
+        metadata: {
+          localPaymentId,
+          credits: String(credits)
+        }
+      }
+    });
+
+    const billingRequest = billingRequestData.billing_requests;
+
+    const flowData = await gocardlessRequest("/billing_request_flows", "POST", {
+      billing_request_flows: {
+        redirect_uri: `${DOMAIN}/success-bank.html?payment_id=${localPaymentId}`,
+        exit_uri: `${DOMAIN}/`,
+        links: {
+          billing_request: billingRequest.id
+        }
+      }
+    });
+
+    const flow = flowData.billing_request_flows;
+
+    await bankPaymentsCollection.insertOne({
+      localPaymentId,
+      billingRequestId: billingRequest.id,
+      credits: Number(credits),
+      amount,
+      currency: "GBP",
+      status: billingRequest.status || "pending",
+      authorisationUrl: flow.authorisation_url,
+      createdAt: Date.now()
+    });
+
+    res.json({
+      success: true,
+      url: flow.authorisation_url,
+      paymentId: localPaymentId
+    });
+
+  } catch (err) {
+    console.log("GoCardless checkout error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --------------------
+// STRIPE WEBHOOK
 // --------------------
 app.post("/webhook", async (req, res) => {
   if (!stripe) return res.status(500).send("Stripe not configured");
@@ -199,6 +425,7 @@ app.post("/webhook", async (req, res) => {
         sessionId: session.id,
         credits,
         used: false,
+        method: "stripe",
         createdAt: Date.now()
       });
 
@@ -212,7 +439,76 @@ app.post("/webhook", async (req, res) => {
 });
 
 // --------------------
-// GET KEY BY SESSION
+// GOCARDLESS WEBHOOK
+// --------------------
+app.post("/gocardless-webhook", async (req, res) => {
+  try {
+    if (!GOCARDLESS_WEBHOOK_SECRET) {
+      return res.status(500).send("GoCardless webhook secret missing");
+    }
+
+    if (!checkDB(req, res)) return;
+
+    const signature = req.headers["webhook-signature"];
+    const rawBody = req.body;
+
+    const expected = crypto
+      .createHmac("sha256", GOCARDLESS_WEBHOOK_SECRET)
+      .update(rawBody)
+      .digest("hex");
+
+    if (!signature || signature !== expected) {
+      console.log("Invalid GoCardless webhook signature");
+      return res.status(498).send("Invalid signature");
+    }
+
+    const body = JSON.parse(rawBody.toString("utf8"));
+    const events = body.events || [];
+
+    for (const event of events) {
+      const billingRequestId = event.links?.billing_request;
+
+      await historyCollection.insertOne({
+        type: "gocardless_webhook",
+        action: event.action,
+        resourceType: event.resource_type,
+        eventId: event.id,
+        billingRequestId: billingRequestId || null,
+        createdAt: Date.now()
+      });
+
+      if (billingRequestId) {
+        const paymentDoc = await bankPaymentsCollection.findOne({
+          billingRequestId
+        });
+
+        if (paymentDoc) {
+          await bankPaymentsCollection.updateOne(
+            { billingRequestId },
+            {
+              $set: {
+                lastWebhookAction: event.action,
+                lastWebhookResourceType: event.resource_type,
+                updatedAt: Date.now()
+              }
+            }
+          );
+
+          await createGoCardlessKeyIfPaid(paymentDoc.localPaymentId);
+        }
+      }
+    }
+
+    res.status(204).send();
+
+  } catch (err) {
+    console.log("GoCardless webhook error:", err.message);
+    res.status(500).send("Webhook error");
+  }
+});
+
+// --------------------
+// GET STRIPE KEY BY SESSION
 // --------------------
 app.get("/get-key-by-session", async (req, res) => {
   if (!checkDB(req, res)) return;
@@ -233,6 +529,44 @@ app.get("/get-key-by-session", async (req, res) => {
     key: keyDoc.key,
     credits: keyDoc.credits
   });
+});
+
+// --------------------
+// GET GOCARDLESS KEY BY PAYMENT ID
+// --------------------
+app.get("/get-gocardless-key-by-id", async (req, res) => {
+  try {
+    if (!checkDB(req, res)) return;
+
+    const paymentId = req.query.payment_id;
+
+    if (!paymentId) {
+      return res.status(400).json({ error: "Missing payment_id" });
+    }
+
+    const result = await createGoCardlessKeyIfPaid(String(paymentId));
+
+    if (result.status === "not_found") {
+      return res.status(404).json({ error: "Payment not found" });
+    }
+
+    if (result.status !== "paid") {
+      return res.json({
+        status: result.status,
+        key: null
+      });
+    }
+
+    res.json({
+      status: "paid",
+      key: result.key,
+      credits: result.credits
+    });
+
+  } catch (err) {
+    console.log("Get GoCardless key error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // --------------------
@@ -286,6 +620,7 @@ app.post("/admin/generate-key", async (req, res) => {
     key,
     credits: amount,
     used: false,
+    method: "admin",
     createdAt: Date.now()
   });
 
@@ -494,4 +829,5 @@ app.get("/balance", async (req, res) => {
 app.listen(PORT, () => {
   console.log("SERVER STARTED ON PORT:", PORT);
   console.log("DOMAIN:", DOMAIN);
+  console.log("GOCARDLESS ENV:", GOCARDLESS_ENV);
 });

@@ -48,17 +48,53 @@ async function buyCredits(amount) {
 
     const data = await res.json();
 
-    console.log("Checkout response:", data);
+    console.log("Stripe checkout response:", data);
 
     if (data.url) {
       window.location.href = data.url;
     } else {
-      alert("Error creating checkout session");
+      alert("Error creating Stripe checkout session");
       console.error(data);
     }
 
   } catch (err) {
     console.error("Fetch error:", err);
+    alert("Server error. Try again.");
+  }
+}
+
+async function buyCreditsBank(amount) {
+  try {
+    const res = await fetch("/create-gocardless-checkout", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        credits: amount
+      })
+    });
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error("GoCardless response error:", errorText);
+      alert("Bank payment failed: " + errorText);
+      return;
+    }
+
+    const data = await res.json();
+
+    console.log("GoCardless checkout response:", data);
+
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      alert("Error creating bank payment");
+      console.error(data);
+    }
+
+  } catch (err) {
+    console.error("GoCardless fetch error:", err);
     alert("Server error. Try again.");
   }
 }
