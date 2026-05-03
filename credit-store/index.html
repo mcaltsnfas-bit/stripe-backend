@@ -13,17 +13,18 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
   <!-- NAVBAR -->
-  <div class="nav-left">
-  <img src="/logo.png" alt="MCALTS Logo" class="site-logo">
-  <div class="brand-text">MCALTS</div>
-</div>
+  <header class="navbar">
+    <div class="nav-left">
+      <img src="/logo.png" alt="MCALTS Logo" class="site-logo">
+      <div class="brand-text">MCALTS</div>
+    </div>
 
     <nav class="nav-links">
       <a href="#top">Home</a>
@@ -33,9 +34,11 @@
     </nav>
 
     <div class="nav-right">
+      <button class="currency-btn">£</button>
       <a class="discord-btn" href="https://discord.gg/PDJJK2byVP" target="_blank" rel="noopener noreferrer">
         Discord
       </a>
+      <button class="cart-btn">🛒</button>
     </div>
   </header>
 
@@ -44,13 +47,10 @@
     <div class="hero-overlay"></div>
 
     <div class="hero-content">
-      <p class="hero-small">Premium Store</p>
-      <h1>Welcome to MCALTS</h1>
-      <p class="hero-sub">
-        Fast delivery • Secure checkout • Instant redeem keys
-      </p>
+      <h1>Welcome to MCALTS!</h1>
 
       <div class="search-wrap">
+        <span class="search-icon">⌕</span>
         <input
           id="search"
           type="text"
@@ -65,72 +65,121 @@
   <section class="shop-section" id="products">
     <div class="section-header">
       <h2>Shop</h2>
-      <p>Choose the credit package that fits you best.</p>
+      <div class="underline"></div>
     </div>
 
     <div class="products" id="product-list">
 
       <div class="card">
-        <div class="badge in-stock">In Stock</div>
-        <div class="card-icon">⚡</div>
-        <div class="card-price">£1.00</div>
-        <h3>100 Credits</h3>
-        <p>Instant redeem key</p>
-        <button onclick="buyCredits(100)">Buy Now</button>
+        <div class="card-image">
+          <img src="/logo.png" alt="MCALTS">
+        </div>
+
+        <div class="card-bottom">
+          <div class="card-row">
+            <div class="card-price">£1.00</div>
+            <div class="badge in-stock">● In Stock</div>
+          </div>
+
+          <h3>100 Credits</h3>
+          <button onclick="buyCredits(100)">Buy Now</button>
+        </div>
       </div>
 
       <div class="card">
-        <div class="badge in-stock">In Stock</div>
-        <div class="card-icon">📦</div>
-        <div class="card-price">£1.80</div>
-        <h3>200 Credits</h3>
-        <p>Starter pack</p>
-        <button onclick="buyCredits(200)">Buy Now</button>
-      </div>
+        <div class="card-image">
+          <img src="/logo.png" alt="MCALTS">
+        </div>
 
-      <div class="card">
-        <div class="badge in-stock">In Stock</div>
-        <div class="card-icon">💎</div>
-        <div class="card-price">£2.70</div>
-        <h3>300 Credits</h3>
-        <p>Value pack</p>
-        <button onclick="buyCredits(300)">Buy Now</button>
-      </div>
+        <div class="card-bottom">
+          <div class="card-row">
+            <div class="card-price">£1.80</div>
+            <div class="badge in-stock">● In Stock</div>
+          </div>
 
-      <div class="card">
-        <div class="badge in-stock">In Stock</div>
-        <div class="card-icon">🔥</div>
-        <div class="card-price">£3.60</div>
-        <h3>400 Credits</h3>
-        <p>Boost pack</p>
-        <button onclick="buyCredits(400)">Buy Now</button>
+          <h3>200 Credits</h3>
+          <button onclick="buyCredits(200)">Buy Now</button>
+        </div>
       </div>
 
       <div class="card featured">
-        <div class="badge best-value">Best Value</div>
-        <div class="card-icon">⭐</div>
-        <div class="card-price">£4.50</div>
-        <h3>500 Credits</h3>
-        <p>Best value bundle</p>
-        <button onclick="buyCredits(500)">Buy Now</button>
+        <div class="card-image">
+          <img src="/logo.png" alt="MCALTS">
+        </div>
+
+        <div class="card-bottom">
+          <div class="card-row">
+            <div class="card-price">£4.50</div>
+            <div class="badge best-value">★ Best Value</div>
+          </div>
+
+          <h3>500 Credits</h3>
+          <button onclick="buyCredits(500)">Buy Now</button>
+        </div>
       </div>
 
       <div class="card">
-        <div class="badge premium">Premium</div>
-        <div class="card-icon">🚀</div>
-        <div class="card-price">£6.50</div>
-        <h3>750 Credits</h3>
-        <p>Premium bundle</p>
-        <button onclick="buyCredits(750)">Buy Now</button>
+        <div class="card-image">
+          <img src="/logo.png" alt="MCALTS">
+        </div>
+
+        <div class="card-bottom">
+          <div class="card-row">
+            <div class="card-price">£2.70</div>
+            <div class="badge in-stock">● In Stock</div>
+          </div>
+
+          <h3>300 Credits</h3>
+          <button onclick="buyCredits(300)">Buy Now</button>
+        </div>
       </div>
 
       <div class="card">
-        <div class="badge premium">Premium</div>
-        <div class="card-icon">👑</div>
-        <div class="card-price">£8.00</div>
-        <h3>1000 Credits</h3>
-        <p>Ultimate premium pack</p>
-        <button onclick="buyCredits(1000)">Buy Now</button>
+        <div class="card-image">
+          <img src="/logo.png" alt="MCALTS">
+        </div>
+
+        <div class="card-bottom">
+          <div class="card-row">
+            <div class="card-price">£3.60</div>
+            <div class="badge in-stock">● In Stock</div>
+          </div>
+
+          <h3>400 Credits</h3>
+          <button onclick="buyCredits(400)">Buy Now</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-image">
+          <img src="/logo.png" alt="MCALTS">
+        </div>
+
+        <div class="card-bottom">
+          <div class="card-row">
+            <div class="card-price">£6.50</div>
+            <div class="badge premium">Premium</div>
+          </div>
+
+          <h3>750 Credits</h3>
+          <button onclick="buyCredits(750)">Buy Now</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-image">
+          <img src="/logo.png" alt="MCALTS">
+        </div>
+
+        <div class="card-bottom">
+          <div class="card-row">
+            <div class="card-price">£8.00</div>
+            <div class="badge premium">Premium</div>
+          </div>
+
+          <h3>1000 Credits</h3>
+          <button onclick="buyCredits(1000)">Buy Now</button>
+        </div>
       </div>
 
     </div>
@@ -140,7 +189,7 @@
   <section class="reviews-section" id="reviews">
     <div class="section-header">
       <h2>Reviews</h2>
-      <p>Trusted by our customers.</p>
+      <div class="underline"></div>
     </div>
 
     <div class="reviews-grid">
@@ -152,13 +201,13 @@
 
       <div class="review-card">
         <div class="stars">★★★★★</div>
-        <p>"Best site layout and instant key delivery."</p>
+        <p>"Bought credits and got my key instantly."</p>
         <span>- Customer</span>
       </div>
 
       <div class="review-card">
         <div class="stars">★★★★★</div>
-        <p>"Bought credits and got my key instantly."</p>
+        <p>"Clean store and smooth checkout."</p>
         <span>- Customer</span>
       </div>
     </div>
@@ -168,7 +217,7 @@
   <section class="faq-section" id="faq">
     <div class="section-header">
       <h2>FAQ</h2>
-      <p>Common questions.</p>
+      <div class="underline"></div>
     </div>
 
     <div class="faq-list">
@@ -179,7 +228,7 @@
 
       <div class="faq-item">
         <h4>How do I redeem the key?</h4>
-        <p>Use the /redeem command in your Discord server with your purchased key.</p>
+        <p>Use the /redeem command in Discord with your purchased key.</p>
       </div>
 
       <div class="faq-item">
@@ -189,7 +238,6 @@
     </div>
   </section>
 
-  <!-- FOOTER -->
   <footer class="footer">
     <p>© 2026 MCALTS. All rights reserved.</p>
   </footer>
