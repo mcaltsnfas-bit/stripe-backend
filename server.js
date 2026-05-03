@@ -16,7 +16,7 @@ const app = express();
 const DOMAIN = process.env.DOMAIN || "https://mcalts.co.uk";
 
 // --------------------
-// 🔥 FIXED CORS (IMPORTANT)
+// CORS
 // --------------------
 app.use(cors({
   origin: [
@@ -30,13 +30,16 @@ app.use(cors({
 }));
 
 // --------------------
+// STRIPE WEBHOOK RAW BODY
+// IMPORTANT: this must be BEFORE express.json()
+// --------------------
+app.use("/webhook", express.raw({ type: "application/json" }));
+
+// --------------------
 // MIDDLEWARE
 // --------------------
 app.use(express.json());
 app.use(express.static("credit-store"));
-
-// Stripe webhook needs raw body
-app.use("/webhook", express.raw({ type: "application/json" }));
 
 // --------------------
 // ENV
@@ -57,6 +60,10 @@ const adminSessions = new Map();
 // --------------------
 // MONGO
 // --------------------
+if (!MONGO_URI) {
+  console.log("❌ Missing MONGO_URI in .env");
+}
+
 const client = new MongoClient(MONGO_URI || "");
 
 let keysCollection;
@@ -78,6 +85,18 @@ async function connectDB() {
   }
 }
 connectDB();
+
+// --------------------
+// DB CHECK
+// --------------------
+function checkDB(req, res) {
+  if (!keysCollection || !usersCollection || !historyCollection) {
+    res.status(500).json({ error: "Database not ready" });
+    return false;
+  }
+
+  return true;
+}
 
 // --------------------
 // KEY GEN
@@ -149,6 +168,10 @@ app.post("/create-checkout", async (req, res) => {
 // WEBHOOK
 // --------------------
 app.post("/webhook", async (req, res) => {
+  if (!stripe) return res.status(500).send("Stripe not configured");
+  if (!STRIPE_WEBHOOK_SECRET) return res.status(500).send("Webhook secret missing");
+  if (!checkDB(req, res)) return;
+
   let event;
 
   try {
@@ -165,18 +188,24 @@ app.post("/webhook", async (req, res) => {
   if (event.type === "checkout.session.completed") {
     const session = event.data.object;
 
-    const key = generateKey();
-    const credits = Number(session.metadata?.credits || 0);
+    const existingKey = await keysCollection.findOne({ sessionId: session.id });
 
-    await keysCollection.insertOne({
-      key,
-      sessionId: session.id,
-      credits,
-      used: false,
-      createdAt: Date.now()
-    });
+    if (!existingKey) {
+      const key = generateKey();
+      const credits = Number(session.metadata?.credits || 0);
 
-    console.log("KEY CREATED:", key);
+      await keysCollection.insertOne({
+        key,
+        sessionId: session.id,
+        credits,
+        used: false,
+        createdAt: Date.now()
+      });
+
+      console.log("KEY CREATED:", key);
+    } else {
+      console.log("KEY ALREADY EXISTS FOR SESSION:", session.id);
+    }
   }
 
   res.json({ received: true });
@@ -186,6 +215,8 @@ app.post("/webhook", async (req, res) => {
 // GET KEY BY SESSION
 // --------------------
 app.get("/get-key-by-session", async (req, res) => {
+  if (!checkDB(req, res)) return;
+
   const sessionId = req.query.session_id;
 
   if (!sessionId) {
@@ -240,18 +271,25 @@ function checkAdmin(req, res) {
 // --------------------
 app.post("/admin/generate-key", async (req, res) => {
   if (!checkAdmin(req, res)) return;
+  if (!checkDB(req, res)) return;
 
   const { credits } = req.body;
+  const amount = Number(credits);
+
+  if (!amount || amount <= 0) {
+    return res.status(400).json({ error: "Invalid credits amount" });
+  }
+
   const key = generateKey();
 
   await keysCollection.insertOne({
     key,
-    credits: Number(credits),
+    credits: amount,
     used: false,
     createdAt: Date.now()
   });
 
-  res.json({ success: true, key, credits });
+  res.json({ success: true, key, credits: amount });
 });
 
 // --------------------
@@ -259,6 +297,7 @@ app.post("/admin/generate-key", async (req, res) => {
 // --------------------
 app.get("/admin/keys", async (req, res) => {
   if (!checkAdmin(req, res)) return;
+  if (!checkDB(req, res)) return;
 
   const keys = await keysCollection
     .find({})
@@ -270,44 +309,151 @@ app.get("/admin/keys", async (req, res) => {
 });
 
 // --------------------
+// ADMIN: ADD CREDITS
+// --------------------
+app.post("/admin/add-credits", async (req, res) => {
+  if (!checkAdmin(req, res)) return;
+  if (!checkDB(req, res)) return;
+
+  const { userId, amount } = req.body;
+  const creditAmount = Number(amount);
+
+  if (!userId || !creditAmount || creditAmount <= 0) {
+    return res.status(400).json({ error: "Missing or invalid userId/amount" });
+  }
+
+  await usersCollection.updateOne(
+    { userId: String(userId) },
+    { $inc: { credits: creditAmount } },
+    { upsert: true }
+  );
+
+  await historyCollection.insertOne({
+    userId: String(userId),
+    type: "admin_add",
+    credits: creditAmount,
+    createdAt: Date.now()
+  });
+
+  res.json({
+    success: true,
+    message: `Added ${creditAmount} credits to ${userId}`
+  });
+});
+
+// --------------------
+// ADMIN: REMOVE CREDITS
+// --------------------
+app.post("/admin/remove-credits", async (req, res) => {
+  if (!checkAdmin(req, res)) return;
+  if (!checkDB(req, res)) return;
+
+  const { userId, amount } = req.body;
+  const creditAmount = Number(amount);
+
+  if (!userId || !creditAmount || creditAmount <= 0) {
+    return res.status(400).json({ error: "Missing or invalid userId/amount" });
+  }
+
+  await usersCollection.updateOne(
+    { userId: String(userId) },
+    { $inc: { credits: -creditAmount } },
+    { upsert: true }
+  );
+
+  await historyCollection.insertOne({
+    userId: String(userId),
+    type: "admin_remove",
+    credits: creditAmount,
+    createdAt: Date.now()
+  });
+
+  res.json({
+    success: true,
+    message: `Removed ${creditAmount} credits from ${userId}`
+  });
+});
+
+// --------------------
+// ADMIN: REDEEM HISTORY
+// --------------------
+app.get("/admin/redeem-history", async (req, res) => {
+  if (!checkAdmin(req, res)) return;
+  if (!checkDB(req, res)) return;
+
+  const userId = req.query.userId;
+  const query = userId ? { userId: String(userId) } : {};
+
+  const history = await historyCollection
+    .find(query)
+    .sort({ createdAt: -1 })
+    .limit(100)
+    .toArray();
+
+  res.json(history);
+});
+
+// --------------------
 // REDEEM
 // --------------------
 app.post("/redeem", async (req, res) => {
+  if (!checkDB(req, res)) return;
+
   const { key, userId } = req.body;
+
+  if (!key || !userId) {
+    return res.status(400).json({ error: "Missing key or userId" });
+  }
 
   const found = await keysCollection.findOne({ key });
 
   if (!found) return res.status(400).json({ error: "Invalid key" });
   if (found.used) return res.status(400).json({ error: "Key already used" });
 
-  await keysCollection.updateOne({ key }, { $set: { used: true } });
+  await keysCollection.updateOne(
+    { key },
+    {
+      $set: {
+        used: true,
+        usedBy: String(userId),
+        usedAt: Date.now()
+      }
+    }
+  );
 
   await usersCollection.updateOne(
-    { userId },
-    { $inc: { credits: found.credits } },
+    { userId: String(userId) },
+    { $inc: { credits: Number(found.credits) } },
     { upsert: true }
   );
 
   await historyCollection.insertOne({
-    userId,
+    userId: String(userId),
+    type: "redeem",
     key,
-    credits: found.credits,
+    credits: Number(found.credits),
     createdAt: Date.now()
   });
 
-  res.json({ success: true, credits: found.credits });
+  res.json({ success: true, credits: Number(found.credits) });
 });
 
 // --------------------
 // BALANCE
 // --------------------
 app.get("/balance", async (req, res) => {
+  if (!checkDB(req, res)) return;
+
   const userId = req.query.userId;
 
-  const user = await usersCollection.findOne({ userId });
+  if (!userId) {
+    return res.status(400).json({ error: "Missing userId" });
+  }
+
+  const user = await usersCollection.findOne({ userId: String(userId) });
 
   res.json({
-    credits: user ? user.credits : 0
+    credits: user ? Number(user.credits || 0) : 0
   });
 });
 
