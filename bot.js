@@ -21,47 +21,12 @@ const client = new Client({
 // CONFIG
 // --------------------
 const logChannelId = process.env.LOG_CHANNEL_ID;
-
-// IMPORTANT: USE YOUR LIVE DOMAIN
 const API = "https://mcalts.co.uk";
 
 // --------------------
 // ADMIN TOKEN
 // --------------------
 let adminToken = null;
-
-// --------------------
-// LOGIN ADMIN
-// --------------------
-async function loginAdmin() {
-  const res = await safeFetchJSON(`${API}/admin/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      password: process.env.ADMIN_SECRET
-    })
-  });
-
-  if (res?.token) {
-    adminToken = res.token;
-    console.log("🔐 Admin logged in");
-  } else {
-    console.log("❌ Admin login failed");
-  }
-}
-
-// --------------------
-// MASKING
-// --------------------
-function maskUser(user) {
-  const name = user.username || "user";
-  return name.slice(0, 3) + "***";
-}
-
-function maskKey(key) {
-  if (!key) return "INVALID";
-  return key.slice(0, 4) + "****" + key.slice(-2);
-}
 
 // --------------------
 // SAFE FETCH
@@ -80,16 +45,102 @@ async function safeFetchJSON(url, options = {}) {
 
     const text = await res.text();
 
+    let data = null;
+
     try {
-      return JSON.parse(text);
+      data = JSON.parse(text);
     } catch {
       console.log("❌ Non-JSON response:", text);
-      return null;
+      return {
+        error: "Non-JSON response",
+        status: res.status
+      };
     }
+
+    return {
+      ...data,
+      status: res.status,
+      ok: res.ok
+    };
+
   } catch (err) {
     console.log("Fetch error:", err.message);
     return null;
   }
+}
+
+// --------------------
+// LOGIN ADMIN
+// --------------------
+async function loginAdmin() {
+  const res = await safeFetchJSON(`${API}/admin/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      password: process.env.ADMIN_SECRET
+    })
+  });
+
+  if (res?.token) {
+    adminToken = res.token;
+    console.log("🔐 Admin logged in");
+    return true;
+  }
+
+  adminToken = null;
+  console.log("❌ Admin login failed");
+  return false;
+}
+
+// --------------------
+// ADMIN FETCH WITH AUTO-RELOGIN
+// --------------------
+async function adminFetch(path, options = {}) {
+  if (!adminToken) {
+    await loginAdmin();
+  }
+
+  let data = await safeFetchJSON(`${API}${path}`, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      "x-admin-token": adminToken,
+      ...(options.headers || {})
+    }
+  });
+
+  if (data?.status === 403 || data?.error === "Unauthorized") {
+    console.log("🔄 Admin token expired, logging in again...");
+    const loggedIn = await loginAdmin();
+
+    if (!loggedIn) {
+      return { error: "Unauthorized" };
+    }
+
+    data = await safeFetchJSON(`${API}${path}`, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        "x-admin-token": adminToken,
+        ...(options.headers || {})
+      }
+    });
+  }
+
+  return data;
+}
+
+// --------------------
+// MASKING
+// --------------------
+function maskUser(user) {
+  const name = user.username || "user";
+  return name.slice(0, 3) + "***";
+}
+
+function maskKey(key) {
+  if (!key) return "INVALID";
+  return key.slice(0, 4) + "****" + key.slice(-2);
 }
 
 // --------------------
@@ -236,7 +287,7 @@ client.on("interactionCreate", async (interaction) => {
       });
 
       if (!data) return interaction.editReply("❌ Server offline");
-      if (!data.success) return interaction.editReply(`❌ ${data.error}`);
+      if (!data.success) return interaction.editReply(`❌ ${data.error || "Redeem failed"}`);
 
       await logRedeem({
         user: interaction.user,
@@ -256,6 +307,7 @@ client.on("interactionCreate", async (interaction) => {
       );
 
       if (!data) return interaction.editReply("❌ Server offline");
+      if (data.error) return interaction.editReply(`❌ ${data.error}`);
 
       return interaction.editReply(`💰 Balance: ${data.credits}`);
     }
@@ -268,22 +320,15 @@ client.on("interactionCreate", async (interaction) => {
         return interaction.editReply("❌ No permission");
       }
 
-      if (!adminToken) {
-        await loginAdmin();
-      }
-
       const credits = interaction.options.getInteger("credits");
 
-      const data = await safeFetchJSON(`${API}/admin/generate-key`, {
+      const data = await adminFetch("/admin/generate-key", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-admin-token": adminToken
-        },
         body: JSON.stringify({ credits })
       });
 
       if (!data) return interaction.editReply("❌ Server offline");
+      if (data.error) return interaction.editReply(`❌ ${data.error}`);
 
       return interaction.editReply(`🔑 \`${data.key}\` | ${data.credits} credits`);
     }
@@ -299,12 +344,8 @@ client.on("interactionCreate", async (interaction) => {
       const user = interaction.options.getUser("user");
       const amount = interaction.options.getInteger("amount");
 
-      const data = await safeFetchJSON(`${API}/admin/remove-credits`, {
+      const data = await adminFetch("/admin/remove-credits", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-admin-token": adminToken
-        },
         body: JSON.stringify({
           userId: user.id,
           amount
@@ -314,7 +355,7 @@ client.on("interactionCreate", async (interaction) => {
       if (!data) return interaction.editReply("❌ Server offline");
       if (data.error) return interaction.editReply(`❌ ${data.error}`);
 
-      return interaction.editReply(`❌ Removed ${amount} credits from <@${user.id}>`);
+      return interaction.editReply(`✅ Removed ${amount} credits from <@${user.id}>`);
     }
 
     // --------------------
@@ -328,12 +369,8 @@ client.on("interactionCreate", async (interaction) => {
       const user = interaction.options.getUser("user");
       const amount = interaction.options.getInteger("amount");
 
-      const data = await safeFetchJSON(`${API}/admin/add-credits`, {
+      const data = await adminFetch("/admin/add-credits", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-admin-token": adminToken
-        },
         body: JSON.stringify({
           userId: user.id,
           amount
@@ -344,6 +381,40 @@ client.on("interactionCreate", async (interaction) => {
       if (data.error) return interaction.editReply(`❌ ${data.error}`);
 
       return interaction.editReply(`✅ Added ${amount} credits to <@${user.id}>`);
+    }
+
+    // --------------------
+    // REDEEM HISTORY
+    // --------------------
+    if (interaction.commandName === "redeemhistory") {
+      if (!interaction.memberPermissions?.has(PermissionsBitField.Flags.Administrator)) {
+        return interaction.editReply("❌ No permission");
+      }
+
+      const user = interaction.options.getUser("user");
+      const query = user ? `?userId=${user.id}` : "";
+
+      const data = await adminFetch(`/admin/redeem-history${query}`, {
+        method: "GET"
+      });
+
+      if (!data) return interaction.editReply("❌ Server offline");
+      if (data.error) return interaction.editReply(`❌ ${data.error}`);
+
+      if (!Array.isArray(data) || data.length === 0) {
+        return interaction.editReply("No history found.");
+      }
+
+      const lines = data.slice(0, 10).map(item => {
+        const type = item.type || "redeem";
+        const credits = item.credits ?? 0;
+        const key = item.key ? maskKey(item.key) : "N/A";
+        const date = item.createdAt ? new Date(item.createdAt).toLocaleString() : "No date";
+
+        return `• ${type} | ${credits} credits | ${key} | ${date}`;
+      });
+
+      return interaction.editReply(lines.join("\n"));
     }
 
   } catch (err) {
