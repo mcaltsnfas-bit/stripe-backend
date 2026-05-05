@@ -53,7 +53,8 @@ async function safeFetchJSON(url, options = {}) {
       console.log("❌ Non-JSON response:", text);
       return {
         error: "Non-JSON response",
-        status: res.status
+        status: res.status,
+        ok: res.ok
       };
     }
 
@@ -73,22 +74,36 @@ async function safeFetchJSON(url, options = {}) {
 // LOGIN ADMIN
 // --------------------
 async function loginAdmin() {
+  const botAdminSecret = process.env.BOT_ADMIN_SECRET;
+
+  if (!botAdminSecret) {
+    adminToken = null;
+    console.log("❌ Missing BOT_ADMIN_SECRET in .env");
+    return false;
+  }
+
   const res = await safeFetchJSON(`${API}/admin/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      password: process.env.ADMIN_SECRET
+      password: botAdminSecret
     })
   });
 
-  if (res?.token) {
+  if (res?.token && res?.role === "admin") {
     adminToken = res.token;
-    console.log("🔐 Admin logged in");
+    console.log("🔐 Bot logged in as full admin");
     return true;
   }
 
   adminToken = null;
-  console.log("❌ Admin login failed");
+
+  if (res?.role === "mod") {
+    console.log("❌ Bot logged in as moderator, not full admin. Check BOT_ADMIN_SECRET.");
+  } else {
+    console.log("❌ Bot admin login failed");
+  }
+
   return false;
 }
 
@@ -97,7 +112,11 @@ async function loginAdmin() {
 // --------------------
 async function adminFetch(path, options = {}) {
   if (!adminToken) {
-    await loginAdmin();
+    const loggedIn = await loginAdmin();
+
+    if (!loggedIn) {
+      return { error: "Bot could not login as full admin" };
+    }
   }
 
   let data = await safeFetchJSON(`${API}${path}`, {
@@ -109,12 +128,17 @@ async function adminFetch(path, options = {}) {
     }
   });
 
-  if (data?.status === 403 || data?.error === "Unauthorized") {
-    console.log("🔄 Admin token expired, logging in again...");
+  if (
+    data?.status === 403 ||
+    data?.error === "Unauthorized" ||
+    data?.error === "Full admin access required"
+  ) {
+    console.log("🔄 Admin token expired or invalid, logging in again...");
+
     const loggedIn = await loginAdmin();
 
     if (!loggedIn) {
-      return { error: "Unauthorized" };
+      return { error: "Bot could not login as full admin" };
     }
 
     data = await safeFetchJSON(`${API}${path}`, {
@@ -184,7 +208,12 @@ const commands = [
 
   new SlashCommandBuilder()
     .setName("balance")
-    .setDescription("Check your credits"),
+    .setDescription("Check your credits or another user's credits")
+    .addUserOption(o =>
+      o.setName("user")
+        .setDescription("User to check (admin only)")
+        .setRequired(false)
+    ),
 
   new SlashCommandBuilder()
     .setName("generatekey")
@@ -302,12 +331,25 @@ client.on("interactionCreate", async (interaction) => {
     // BALANCE
     // --------------------
     if (interaction.commandName === "balance") {
+      const targetUser = interaction.options.getUser("user") || interaction.user;
+      const checkingSomeoneElse = targetUser.id !== interaction.user.id;
+
+      if (checkingSomeoneElse) {
+        if (!interaction.memberPermissions?.has(PermissionsBitField.Flags.Administrator)) {
+          return interaction.editReply("❌ Only admins can check another user's balance");
+        }
+      }
+
       const data = await safeFetchJSON(
-        `${API}/balance?userId=${interaction.user.id}`
+        `${API}/balance?userId=${targetUser.id}`
       );
 
       if (!data) return interaction.editReply("❌ Server offline");
       if (data.error) return interaction.editReply(`❌ ${data.error}`);
+
+      if (checkingSomeoneElse) {
+        return interaction.editReply(`💰 <@${targetUser.id}>'s Balance: ${data.credits}`);
+      }
 
       return interaction.editReply(`💰 Balance: ${data.credits}`);
     }
