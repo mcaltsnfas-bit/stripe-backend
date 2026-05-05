@@ -52,6 +52,7 @@ const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
 
 const ADMIN_SECRET = process.env.ADMIN_SECRET;
+const MOD_SECRET = process.env.MOD_SECRET;
 
 const GOCARDLESS_ACCESS_TOKEN = process.env.GOCARDLESS_ACCESS_TOKEN;
 const GOCARDLESS_WEBHOOK_SECRET = process.env.GOCARDLESS_WEBHOOK_SECRET;
@@ -79,6 +80,7 @@ const priceMap = {
 
 // --------------------
 // ADMIN SESSIONS
+// role can be "admin" or "mod"
 // --------------------
 const adminSessions = new Map();
 
@@ -575,25 +577,66 @@ app.get("/get-gocardless-key-by-id", async (req, res) => {
 app.post("/admin/login", (req, res) => {
   const { password } = req.body;
 
-  if (!ADMIN_SECRET || password !== ADMIN_SECRET) {
+  let role = null;
+
+  if (ADMIN_SECRET && password === ADMIN_SECRET) {
+    role = "admin";
+  } else if (MOD_SECRET && password === MOD_SECRET) {
+    role = "mod";
+  }
+
+  if (!role) {
     return res.status(403).json({ error: "Invalid password" });
   }
 
   const token = crypto.randomBytes(24).toString("hex");
-  adminSessions.set(token, Date.now() + 1000 * 60 * 60);
 
-  res.json({ token });
+  adminSessions.set(token, {
+    role,
+    expiresAt: Date.now() + 1000 * 60 * 60
+  });
+
+  res.json({
+    token,
+    role
+  });
 });
 
 // --------------------
-// CHECK ADMIN
+// CHECK ADMIN OR MOD
 // --------------------
-function checkAdmin(req, res) {
+function getSession(req) {
   const token = req.headers["x-admin-token"];
-  const expiry = adminSessions.get(token);
+  if (!token) return null;
 
-  if (!token || !expiry || Date.now() > expiry) {
+  const session = adminSessions.get(token);
+
+  if (!session || Date.now() > session.expiresAt) {
+    adminSessions.delete(token);
+    return null;
+  }
+
+  return session;
+}
+
+function checkPanelAccess(req, res) {
+  const session = getSession(req);
+
+  if (!session) {
     res.status(403).json({ error: "Unauthorized" });
+    return null;
+  }
+
+  return session;
+}
+
+function checkFullAdmin(req, res) {
+  const session = checkPanelAccess(req, res);
+
+  if (!session) return false;
+
+  if (session.role !== "admin") {
+    res.status(403).json({ error: "Full admin access required" });
     return false;
   }
 
@@ -601,10 +644,23 @@ function checkAdmin(req, res) {
 }
 
 // --------------------
+// ADMIN: SESSION INFO
+// --------------------
+app.get("/admin/session", async (req, res) => {
+  const session = checkPanelAccess(req, res);
+  if (!session) return;
+
+  res.json({
+    role: session.role
+  });
+});
+
+// --------------------
 // ADMIN: GENERATE KEY
+// FULL ADMIN ONLY
 // --------------------
 app.post("/admin/generate-key", async (req, res) => {
-  if (!checkAdmin(req, res)) return;
+  if (!checkFullAdmin(req, res)) return;
   if (!checkDB(req, res)) return;
 
   const { credits } = req.body;
@@ -628,10 +684,11 @@ app.post("/admin/generate-key", async (req, res) => {
 });
 
 // --------------------
-// ADMIN: GET KEYS
+// ADMIN/MOD: GET KEYS
 // --------------------
 app.get("/admin/keys", async (req, res) => {
-  if (!checkAdmin(req, res)) return;
+  const session = checkPanelAccess(req, res);
+  if (!session) return;
   if (!checkDB(req, res)) return;
 
   const keys = await keysCollection
@@ -645,9 +702,10 @@ app.get("/admin/keys", async (req, res) => {
 
 // --------------------
 // ADMIN: DELETE KEY
+// FULL ADMIN ONLY
 // --------------------
 app.post("/admin/delete-key", async (req, res) => {
-  if (!checkAdmin(req, res)) return;
+  if (!checkFullAdmin(req, res)) return;
   if (!checkDB(req, res)) return;
 
   const { key } = req.body;
@@ -676,9 +734,10 @@ app.post("/admin/delete-key", async (req, res) => {
 
 // --------------------
 // ADMIN: ADD CREDITS
+// FULL ADMIN ONLY
 // --------------------
 app.post("/admin/add-credits", async (req, res) => {
-  if (!checkAdmin(req, res)) return;
+  if (!checkFullAdmin(req, res)) return;
   if (!checkDB(req, res)) return;
 
   const { userId, amount } = req.body;
@@ -709,9 +768,10 @@ app.post("/admin/add-credits", async (req, res) => {
 
 // --------------------
 // ADMIN: REMOVE CREDITS
+// FULL ADMIN ONLY
 // --------------------
 app.post("/admin/remove-credits", async (req, res) => {
-  if (!checkAdmin(req, res)) return;
+  if (!checkFullAdmin(req, res)) return;
   if (!checkDB(req, res)) return;
 
   const { userId, amount } = req.body;
@@ -741,10 +801,11 @@ app.post("/admin/remove-credits", async (req, res) => {
 });
 
 // --------------------
-// ADMIN: REDEEM HISTORY
+// ADMIN/MOD: REDEEM HISTORY
 // --------------------
 app.get("/admin/redeem-history", async (req, res) => {
-  if (!checkAdmin(req, res)) return;
+  const session = checkPanelAccess(req, res);
+  if (!session) return;
   if (!checkDB(req, res)) return;
 
   const userId = req.query.userId;
