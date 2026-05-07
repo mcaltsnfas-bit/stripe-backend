@@ -479,9 +479,24 @@ a {
   line-height: 1.5;
 }
 
+/* PAY BUTTONS - HIDDEN UNTIL HOVER ON DESKTOP */
 .payment-buttons {
   display: grid;
   gap: 9px;
+  opacity: 0;
+  transform: translateY(8px);
+  max-height: 0;
+  overflow: hidden;
+  pointer-events: none;
+  transition: opacity 0.22s ease, transform 0.22s ease, max-height 0.22s ease;
+}
+
+.card:hover .payment-buttons,
+.card:focus-within .payment-buttons {
+  opacity: 1;
+  transform: translateY(0);
+  max-height: 110px;
+  pointer-events: auto;
 }
 
 .card button {
@@ -822,6 +837,14 @@ a {
   .card p {
     font-size: 13px;
     margin-bottom: 13px;
+  }
+
+  /* MOBILE DOES NOT HAVE HOVER, SO BUTTONS STAY VISIBLE */
+  .payment-buttons {
+    opacity: 1;
+    transform: none;
+    max-height: 110px;
+    pointer-events: auto;
   }
 
   .card button {
