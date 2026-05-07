@@ -56,7 +56,7 @@
       <h1>Buy MCALTS credits fast.</h1>
 
       <p class="hero-text">
-        Choose a credit pack, pay securely by card or bank, then redeem your key in Discord.
+        Choose a credit pack, pay by bank, then redeem your key in Discord.
       </p>
 
       <div class="hero-actions">
@@ -66,7 +66,7 @@
 
       <div class="trust-row">
         <div>⚡ Fast delivery</div>
-        <div>🔐 Secure checkout</div>
+        <div>🏦 Pay by bank</div>
         <div>🎁 Redeem keys</div>
       </div>
     </div>
@@ -77,7 +77,7 @@
     <div class="section-header">
       <div>
         <h2>Shop Credits</h2>
-        <p>Pick a pack below. Card payments use Stripe and bank payments use GoCardless.</p>
+        <p>Pick a pack below. Pay by Bank is the main checkout option. Card payment is available if your bank is not listed.</p>
       </div>
 
       <div class="search-wrap">
@@ -108,8 +108,10 @@
           <p>Starter pack for quick testing.</p>
 
           <div class="payment-buttons">
-            <button onclick="buyCredits(100)">Pay by Card</button>
-            <button class="bank-btn" onclick="buyCreditsBank(100)">Pay by Bank</button>
+            <button onclick="buyCreditsBank(100)">Pay</button>
+            <div class="fallback-text">
+              Bank not showing? <button class="text-pay-btn" onclick="buyCredits(100)">Pay by card instead</button>
+            </div>
           </div>
         </div>
       </div>
@@ -129,8 +131,10 @@
           <p>A small pack with better value.</p>
 
           <div class="payment-buttons">
-            <button onclick="buyCredits(200)">Pay by Card</button>
-            <button class="bank-btn" onclick="buyCreditsBank(200)">Pay by Bank</button>
+            <button onclick="buyCreditsBank(200)">Pay</button>
+            <div class="fallback-text">
+              Bank not showing? <button class="text-pay-btn" onclick="buyCredits(200)">Pay by card instead</button>
+            </div>
           </div>
         </div>
       </div>
@@ -150,8 +154,10 @@
           <p>Useful pack for regular use.</p>
 
           <div class="payment-buttons">
-            <button onclick="buyCredits(300)">Pay by Card</button>
-            <button class="bank-btn" onclick="buyCreditsBank(300)">Pay by Bank</button>
+            <button onclick="buyCreditsBank(300)">Pay</button>
+            <div class="fallback-text">
+              Bank not showing? <button class="text-pay-btn" onclick="buyCredits(300)">Pay by card instead</button>
+            </div>
           </div>
         </div>
       </div>
@@ -171,8 +177,10 @@
           <p>More credits for better value.</p>
 
           <div class="payment-buttons">
-            <button onclick="buyCredits(400)">Pay by Card</button>
-            <button class="bank-btn" onclick="buyCreditsBank(400)">Pay by Bank</button>
+            <button onclick="buyCreditsBank(400)">Pay</button>
+            <div class="fallback-text">
+              Bank not showing? <button class="text-pay-btn" onclick="buyCredits(400)">Pay by card instead</button>
+            </div>
           </div>
         </div>
       </div>
@@ -194,8 +202,10 @@
           <p>The most balanced pack.</p>
 
           <div class="payment-buttons">
-            <button onclick="buyCredits(500)">Pay by Card</button>
-            <button class="bank-btn" onclick="buyCreditsBank(500)">Pay by Bank</button>
+            <button onclick="buyCreditsBank(500)">Pay</button>
+            <div class="fallback-text">
+              Bank not showing? <button class="text-pay-btn" onclick="buyCredits(500)">Pay by card instead</button>
+            </div>
           </div>
         </div>
       </div>
@@ -215,8 +225,10 @@
           <p>Premium pack for bigger orders.</p>
 
           <div class="payment-buttons">
-            <button onclick="buyCredits(750)">Pay by Card</button>
-            <button class="bank-btn" onclick="buyCreditsBank(750)">Pay by Bank</button>
+            <button onclick="buyCreditsBank(750)">Pay</button>
+            <div class="fallback-text">
+              Bank not showing? <button class="text-pay-btn" onclick="buyCredits(750)">Pay by card instead</button>
+            </div>
           </div>
         </div>
       </div>
@@ -236,8 +248,10 @@
           <p>Largest pack with the best total amount.</p>
 
           <div class="payment-buttons">
-            <button onclick="buyCredits(1000)">Pay by Card</button>
-            <button class="bank-btn" onclick="buyCreditsBank(1000)">Pay by Bank</button>
+            <button onclick="buyCreditsBank(1000)">Pay</button>
+            <div class="fallback-text">
+              Bank not showing? <button class="text-pay-btn" onclick="buyCredits(1000)">Pay by card instead</button>
+            </div>
           </div>
         </div>
       </div>
@@ -261,8 +275,8 @@
 
       <div class="how-card">
         <div class="step-number">2</div>
-        <h3>Pay securely</h3>
-        <p>Use card checkout or Pay by Bank.</p>
+        <h3>Pay</h3>
+        <p>Click Pay to use Pay by Bank. If your bank is not listed, use card instead.</p>
       </div>
 
       <div class="how-card">
@@ -312,6 +326,11 @@
       <div class="faq-item">
         <h4>How do I receive my credits?</h4>
         <p>After payment, you receive a redeem key on the success page.</p>
+      </div>
+
+      <div class="faq-item">
+        <h4>What if my bank does not show?</h4>
+        <p>Click the card payment option under the Pay button and use Stripe checkout instead.</p>
       </div>
 
       <div class="faq-item">
