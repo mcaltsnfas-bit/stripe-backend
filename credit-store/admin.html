@@ -35,7 +35,7 @@
       position: fixed;
       inset: 0;
       background:
-        linear-gradient(to bottom, rgba(8, 8, 13, 0.62), rgba(8, 8, 13, 0.96)),
+        linear-gradient(to bottom, rgba(8, 8, 13, 0.70), rgba(8, 8, 13, 0.97)),
         url("/hero-bg.jpg");
       background-size: cover;
       background-position: center top;
@@ -73,7 +73,6 @@
       display: none !important;
     }
 
-    /* LOGIN */
     .login-page {
       min-height: 100vh;
       display: flex;
@@ -132,7 +131,7 @@
 
     .input {
       width: 100%;
-      height: 50px;
+      height: 48px;
       border-radius: 14px;
       border: 1px solid rgba(255,255,255,0.08);
       background: rgba(255,255,255,0.045);
@@ -179,11 +178,6 @@
       cursor: pointer;
     }
 
-    .toggle-password-btn:hover {
-      background: rgba(109, 92, 255, 0.20);
-      color: white;
-    }
-
     .primary-btn {
       width: 100%;
       height: 52px;
@@ -210,7 +204,6 @@
       font-weight: 700;
     }
 
-    /* DASHBOARD */
     .dashboard {
       display: grid;
       grid-template-columns: 270px 1fr;
@@ -218,7 +211,7 @@
     }
 
     .sidebar {
-      background: rgba(8, 8, 14, 0.82);
+      background: rgba(8, 8, 14, 0.84);
       border-right: 1px solid rgba(255,255,255,0.07);
       padding: 24px;
       position: sticky;
@@ -262,7 +255,7 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      margin-bottom: 26px;
+      margin-bottom: 24px;
       padding: 9px 12px;
       border-radius: 999px;
       background: rgba(109, 92, 255, 0.14);
@@ -278,19 +271,32 @@
       color: #8effb9;
     }
 
+    .nav-group {
+      display: grid;
+      gap: 8px;
+    }
+
     .side-link {
       width: 100%;
-      height: 44px;
+      height: 46px;
       border: none;
-      border-radius: 13px;
+      border-radius: 14px;
       color: rgba(255,255,255,0.64);
       background: transparent;
       text-align: left;
       padding: 0 14px;
       cursor: pointer;
-      font-weight: 800;
+      font-weight: 850;
       font-size: 14px;
-      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 11px;
+    }
+
+    .side-link span {
+      width: 22px;
+      display: inline-flex;
+      justify-content: center;
     }
 
     .side-link:hover,
@@ -346,6 +352,12 @@
       font-size: 14px;
     }
 
+    .top-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
     .refresh-btn {
       height: 44px;
       border-radius: 13px;
@@ -361,6 +373,26 @@
     .refresh-btn:hover {
       background: rgba(109, 92, 255, 0.17);
       color: white;
+    }
+
+    .mod-note {
+      background: rgba(46, 204, 113, 0.10);
+      border: 1px solid rgba(46, 204, 113, 0.22);
+      color: #a6ffc8;
+      border-radius: 18px;
+      padding: 15px 16px;
+      margin-bottom: 22px;
+      line-height: 1.6;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .page {
+      display: none;
+    }
+
+    .page.active {
+      display: block;
     }
 
     .stats {
@@ -416,16 +448,11 @@
       letter-spacing: -0.4px;
     }
 
-    .mod-note {
-      background: rgba(46, 204, 113, 0.10);
-      border: 1px solid rgba(46, 204, 113, 0.22);
-      color: #a6ffc8;
-      border-radius: 18px;
-      padding: 15px 16px;
-      margin-bottom: 22px;
-      line-height: 1.6;
+    .panel-subtitle {
+      color: rgba(255,255,255,0.55);
       font-size: 14px;
-      font-weight: 700;
+      margin: -8px 0 18px;
+      line-height: 1.6;
     }
 
     .form-row {
@@ -477,62 +504,81 @@
       line-height: 1.6;
     }
 
-    .table-tools {
+    .tools {
       display: flex;
       gap: 12px;
       margin-bottom: 16px;
-    }
-
-    .table-tools input {
-      margin: 0;
-    }
-
-    .keys-list {
-      display: grid;
-      gap: 12px;
-      max-height: 650px;
-      overflow: auto;
-      padding-right: 4px;
-    }
-
-    .keys-list::-webkit-scrollbar {
-      width: 8px;
-    }
-
-    .keys-list::-webkit-scrollbar-track {
-      background: rgba(255,255,255,0.04);
-      border-radius: 999px;
-    }
-
-    .keys-list::-webkit-scrollbar-thumb {
-      background: rgba(128,116,255,0.28);
-      border-radius: 999px;
-    }
-
-    .key-card {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 14px;
       align-items: center;
-      background: rgba(255,255,255,0.035);
-      border: 1px solid rgba(255,255,255,0.06);
+      flex-wrap: wrap;
+    }
+
+    .tools .input {
+      margin: 0;
+      flex: 1;
+      min-width: 220px;
+    }
+
+    .filter-select {
+      height: 48px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.045);
+      color: white;
+      padding: 0 14px;
+      outline: none;
+      font-weight: 800;
+    }
+
+    .filter-select option {
+      background: #11111a;
+      color: white;
+    }
+
+    .table-wrap {
+      overflow: auto;
       border-radius: 18px;
-      padding: 16px;
+      border: 1px solid rgba(255,255,255,0.07);
+      background: rgba(255,255,255,0.025);
     }
 
-    .key-code {
-      font-weight: 900;
-      letter-spacing: 0.3px;
-      word-break: break-all;
-      font-size: 14px;
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 760px;
     }
 
-    .key-meta {
-      margin-top: 8px;
-      color: rgba(255,255,255,0.50);
+    th,
+    td {
+      padding: 14px 14px;
+      text-align: left;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
       font-size: 13px;
-      line-height: 1.6;
+      vertical-align: middle;
+    }
+
+    th {
+      color: rgba(255,255,255,0.48);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      font-weight: 900;
+      background: rgba(255,255,255,0.025);
+    }
+
+    td {
+      color: rgba(255,255,255,0.78);
       font-weight: 700;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .mono {
+      font-family: Consolas, Monaco, monospace;
+      font-weight: 900;
+      color: white;
+      word-break: break-all;
     }
 
     .pill {
@@ -541,48 +587,87 @@
       border-radius: 999px;
       font-size: 12px;
       font-weight: 900;
+      white-space: nowrap;
     }
 
-    .pill.used {
+    .pill.used,
+    .pill.red {
       background: rgba(255, 88, 88, 0.12);
       color: #ff9d9d;
       border: 1px solid rgba(255, 88, 88, 0.22);
     }
 
-    .pill.unused {
+    .pill.unused,
+    .pill.green {
       background: rgba(46, 204, 113, 0.12);
       color: #8effb9;
       border: 1px solid rgba(46, 204, 113, 0.22);
     }
 
-    .copy-btn {
-      min-height: 38px;
-      border-radius: 11px;
+    .pill.blue {
+      background: rgba(109, 92, 255, 0.13);
+      color: #d9d3ff;
+      border: 1px solid rgba(109, 92, 255, 0.25);
+    }
+
+    .action-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .mini-btn {
+      min-height: 34px;
+      border-radius: 10px;
       border: 1px solid rgba(128,116,255,0.32);
       background: rgba(109, 92, 255, 0.10);
       color: #d9d3ff;
       font-weight: 900;
-      padding: 0 12px;
+      padding: 0 10px;
       cursor: pointer;
-      margin-top: 10px;
-      margin-right: 8px;
+      white-space: nowrap;
     }
 
-    .copy-btn:hover {
+    .mini-btn:hover {
       background: rgba(109, 92, 255, 0.18);
       color: white;
     }
 
-    .delete-key-btn {
+    .mini-btn.danger {
       border-color: rgba(255, 88, 88, 0.30);
       background: rgba(255, 88, 88, 0.10);
       color: #ffabab;
-      margin-left: 0;
     }
 
-    .delete-key-btn:hover {
+    .mini-btn.danger:hover {
       background: rgba(255, 88, 88, 0.17);
       color: white;
+    }
+
+    .cards-mobile {
+      display: none;
+      gap: 12px;
+    }
+
+    .mobile-card {
+      background: rgba(255,255,255,0.035);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 18px;
+      padding: 15px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .mobile-card-title {
+      font-weight: 900;
+      word-break: break-all;
+    }
+
+    .mobile-card-meta {
+      color: rgba(255,255,255,0.56);
+      font-size: 13px;
+      line-height: 1.6;
+      font-weight: 700;
     }
 
     .notice {
@@ -625,7 +710,7 @@
       }
     }
 
-    @media (max-width: 650px) {
+    @media (max-width: 720px) {
       .login-card {
         padding: 24px;
         border-radius: 24px;
@@ -648,6 +733,10 @@
         font-size: 31px;
       }
 
+      .top-actions {
+        width: 100%;
+      }
+
       .refresh-btn {
         width: 100%;
       }
@@ -665,21 +754,26 @@
         border-radius: 20px;
       }
 
-      .key-card {
-        grid-template-columns: 1fr;
-      }
-
-      .copy-btn {
-        width: 100%;
-        margin-right: 0;
-      }
-
-      .delete-key-btn {
-        margin-left: 0;
-      }
-
       .sidebar {
         padding: 18px;
+      }
+
+      .table-wrap {
+        display: none;
+      }
+
+      .cards-mobile {
+        display: grid;
+      }
+
+      .tools {
+        display: grid;
+      }
+
+      .tools .input,
+      .filter-select {
+        width: 100%;
+        min-width: 0;
       }
     }
   </style>
@@ -695,8 +789,8 @@
       <p>Enter the full admin password or moderator password.</p>
 
       <div class="role-hint">
-        Full admin can generate/delete keys and manage credits.<br>
-        Moderator can only view keys and stats.
+        Full admin can manage keys and credits.<br>
+        Moderator can view keys, users, and history.
       </div>
 
       <div class="password-wrap">
@@ -724,55 +818,61 @@
 
       <div id="roleBadge" class="role-badge">Loading...</div>
 
-      <button class="side-link active" onclick="scrollToPanel(event, 'overview')">Overview</button>
-      <button class="side-link admin-only" onclick="scrollToPanel(event, 'generate')">Generate Key</button>
-      <button class="side-link admin-only" onclick="scrollToPanel(event, 'credits')">Credits</button>
-      <button class="side-link" onclick="scrollToPanel(event, 'keysPanel')">Keys</button>
+      <div class="nav-group">
+        <button class="side-link active" data-page="overview" onclick="showPage('overview')"><span>📊</span> Overview</button>
+        <button class="side-link" data-page="keys" onclick="showPage('keys')"><span>🔑</span> Keys</button>
+        <button class="side-link" data-page="users" onclick="showPage('users')"><span>👥</span> Users</button>
+        <button class="side-link admin-only" data-page="credits" onclick="showPage('credits')"><span>💳</span> Credits</button>
+        <button class="side-link" data-page="history" onclick="showPage('history')"><span>🧾</span> History</button>
+      </div>
 
       <button class="logout-btn" onclick="logout()">Logout</button>
     </aside>
 
     <main class="main">
-      <div class="topbar" id="overview">
+      <div class="topbar">
         <div>
-          <h1>Admin Dashboard</h1>
-          <p id="dashboardSubtitle">Manage your store, generated keys, and user credits.</p>
+          <h1 id="pageTitle">Overview</h1>
+          <p id="dashboardSubtitle">Manage your store, generated keys, users, credits, and history.</p>
         </div>
 
-        <button class="refresh-btn" onclick="refreshDashboard()">Refresh</button>
+        <div class="top-actions">
+          <button class="refresh-btn" onclick="refreshDashboard()">Refresh</button>
+        </div>
       </div>
 
       <div id="modNote" class="mod-note hidden">
-        Moderator mode: you can view keys and stats, but you cannot generate/delete keys or add/remove credits.
+        Moderator mode: you can view keys, users, and history, but you cannot generate/delete keys or add/remove credits.
       </div>
 
-      <section class="stats">
-        <div class="stat-card">
-          <span>Total Keys</span>
-          <h2 id="totalKeys">0</h2>
-        </div>
+      <!-- OVERVIEW -->
+      <section id="page-overview" class="page active">
+        <section class="stats">
+          <div class="stat-card">
+            <span>Total Keys</span>
+            <h2 id="totalKeys">0</h2>
+          </div>
 
-        <div class="stat-card">
-          <span>Unused Keys</span>
-          <h2 id="unusedKeys">0</h2>
-        </div>
+          <div class="stat-card">
+            <span>Unused Keys</span>
+            <h2 id="unusedKeys">0</h2>
+          </div>
 
-        <div class="stat-card">
-          <span>Used Keys</span>
-          <h2 id="usedKeys">0</h2>
-        </div>
+          <div class="stat-card">
+            <span>Used Keys</span>
+            <h2 id="usedKeys">0</h2>
+          </div>
 
-        <div class="stat-card">
-          <span>Total Key Credits</span>
-          <h2 id="totalCredits">0</h2>
-        </div>
-      </section>
+          <div class="stat-card">
+            <span>Total Key Credits</span>
+            <h2 id="totalCredits">0</h2>
+          </div>
+        </section>
 
-      <section class="grid">
-
-        <div id="adminControls" class="admin-only">
-          <div class="panel" id="generate">
-            <h3>Generate Key</h3>
+        <div class="grid">
+          <div class="panel admin-only">
+            <h3>Quick Generate</h3>
+            <p class="panel-subtitle">Create a redeem key manually.</p>
 
             <div class="form-row">
               <label>Credits</label>
@@ -784,10 +884,85 @@
             <div id="generatedResult" class="result-box"></div>
           </div>
 
-          <br>
+          <div class="panel">
+            <h3>Latest Keys</h3>
+            <p class="panel-subtitle">A quick look at the newest keys.</p>
+            <div id="overviewKeysMobile" class="cards-mobile" style="display:grid;"></div>
+          </div>
+        </div>
+      </section>
 
-          <div class="panel" id="credits">
+      <!-- KEYS -->
+      <section id="page-keys" class="page">
+        <div class="panel">
+          <h3>Keys</h3>
+          <p class="panel-subtitle">Search, filter, copy, and delete keys.</p>
+
+          <div class="tools">
+            <input class="input" id="keySearch" placeholder="Search keys..." onkeyup="renderKeys()">
+
+            <select id="keyFilter" class="filter-select" onchange="renderKeys()">
+              <option value="all">All keys</option>
+              <option value="unused">Unused only</option>
+              <option value="used">Used only</option>
+            </select>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Key</th>
+                  <th>Credits</th>
+                  <th>Status</th>
+                  <th>Method</th>
+                  <th>Created</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="keysTable"></tbody>
+            </table>
+          </div>
+
+          <div id="keysMobile" class="cards-mobile"></div>
+          <div id="keysError" class="error"></div>
+        </div>
+      </section>
+
+      <!-- USERS -->
+      <section id="page-users" class="page">
+        <div class="panel">
+          <h3>Users</h3>
+          <p class="panel-subtitle">View users and their credit balances.</p>
+
+          <div class="tools">
+            <input class="input" id="userSearch" placeholder="Search user ID..." onkeyup="renderUsers()">
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>User ID</th>
+                  <th>Credits</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="usersTable"></tbody>
+            </table>
+          </div>
+
+          <div id="usersMobile" class="cards-mobile"></div>
+          <div id="usersError" class="error"></div>
+        </div>
+      </section>
+
+      <!-- CREDITS -->
+      <section id="page-credits" class="page">
+        <div class="grid">
+          <div class="panel admin-only">
             <h3>Add Credits</h3>
+            <p class="panel-subtitle">Add credits directly to a Discord user ID.</p>
 
             <div class="form-row">
               <label>User ID</label>
@@ -800,10 +975,11 @@
             </div>
 
             <button class="small-btn success-btn" onclick="addCredits()">Add Credits</button>
+          </div>
 
-            <hr style="border-color: rgba(255,255,255,0.07); margin: 22px 0;">
-
+          <div class="panel admin-only">
             <h3>Remove Credits</h3>
+            <p class="panel-subtitle">Remove credits from a Discord user ID.</p>
 
             <div class="form-row">
               <label>User ID</label>
@@ -818,18 +994,36 @@
             <button class="small-btn danger-btn" onclick="removeCredits()">Remove Credits</button>
           </div>
         </div>
+      </section>
 
-        <div class="panel" id="keysPanel">
-          <h3>Recent Keys</h3>
+      <!-- HISTORY -->
+      <section id="page-history" class="page">
+        <div class="panel">
+          <h3>History</h3>
+          <p class="panel-subtitle">View redeems, admin actions, and webhook events.</p>
 
-          <div class="table-tools">
-            <input class="input" id="keySearch" placeholder="Search keys..." onkeyup="renderKeys()">
+          <div class="tools">
+            <input class="input" id="historySearch" placeholder="Search history..." onkeyup="renderHistory()">
           </div>
 
-          <div id="keys" class="keys-list">Loading...</div>
-          <div id="error" class="error"></div>
-        </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Type</th>
+                  <th>User</th>
+                  <th>Credits</th>
+                  <th>Key</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody id="historyTable"></tbody>
+            </table>
+          </div>
 
+          <div id="historyMobile" class="cards-mobile"></div>
+          <div id="historyError" class="error"></div>
+        </div>
       </section>
     </main>
   </div>
@@ -838,8 +1032,11 @@
 
 <script>
   let allKeys = [];
-  let isLoadingKeys = false;
+  let allUsers = [];
+  let allHistory = [];
+  let isLoading = false;
   let currentRole = localStorage.getItem("admin_role") || null;
+  let activePage = "overview";
 
   function togglePassword() {
     const passwordInput = document.getElementById("password");
@@ -872,10 +1069,50 @@
     return currentRole === "admin";
   }
 
+  function showPage(page) {
+    activePage = page;
+
+    document.querySelectorAll(".page").forEach(el => {
+      el.classList.remove("active");
+    });
+
+    const pageEl = document.getElementById(`page-${page}`);
+    if (pageEl) pageEl.classList.add("active");
+
+    document.querySelectorAll(".side-link").forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.page === page);
+    });
+
+    const titles = {
+      overview: "Overview",
+      keys: "Keys",
+      users: "Users",
+      credits: "Credits",
+      history: "History"
+    };
+
+    const subtitles = {
+      overview: currentRole === "admin"
+        ? "Manage your store, generated keys, users, credits, and history."
+        : "View your store stats, keys, users, and history in moderator mode.",
+      keys: "Search, filter, copy, and manage redeem keys.",
+      users: "View users and credit balances.",
+      credits: "Add or remove credits from users.",
+      history: "View redeems, admin actions, and webhook events."
+    };
+
+    document.getElementById("pageTitle").innerText = titles[page] || "Dashboard";
+    document.getElementById("dashboardSubtitle").innerText = subtitles[page] || "";
+
+    if (page === "credits" && !isFullAdmin()) {
+      showPage("overview");
+      showNotice("Moderator accounts cannot access credits tools");
+    }
+  }
+
   function applyRoleUI() {
     const badge = document.getElementById("roleBadge");
     const modNote = document.getElementById("modNote");
-    const subtitle = document.getElementById("dashboardSubtitle");
 
     if (badge) {
       badge.classList.toggle("mod", currentRole === "mod");
@@ -886,22 +1123,11 @@
       modNote.classList.toggle("hidden", currentRole !== "mod");
     }
 
-    if (subtitle) {
-      subtitle.innerText = currentRole === "admin"
-        ? "Manage your store, generated keys, and user credits."
-        : "View store keys and stats in moderator mode.";
-    }
-
     document.querySelectorAll(".admin-only").forEach(el => {
       el.classList.toggle("hidden", currentRole !== "admin");
     });
 
-    const grid = document.querySelector(".grid");
-    if (grid && currentRole === "mod") {
-      grid.style.gridTemplateColumns = "1fr";
-    } else if (grid) {
-      grid.style.gridTemplateColumns = "";
-    }
+    showPage(activePage);
   }
 
   function handleExpiredSession() {
@@ -914,17 +1140,49 @@
     document.getElementById("loginError").innerText = "Session expired. Please log in again.";
   }
 
-  function scrollToPanel(event, id) {
-    const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-
-    document.querySelectorAll(".side-link").forEach(btn => {
-      btn.classList.remove("active");
+  async function apiGet(url) {
+    const res = await fetch(url, {
+      headers: {
+        "x-admin-token": getToken()
+      }
     });
 
-    if (event?.target) {
-      event.target.classList.add("active");
+    const data = await res.json();
+
+    if (res.status === 403) {
+      handleExpiredSession();
+      throw new Error(data.error || "Unauthorized");
     }
+
+    if (!res.ok || data.error) {
+      throw new Error(data.error || "Server error");
+    }
+
+    return data;
+  }
+
+  async function apiPost(url, body) {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-admin-token": getToken()
+      },
+      body: JSON.stringify(body)
+    });
+
+    const data = await res.json();
+
+    if (res.status === 403) {
+      if (data.error === "Unauthorized") handleExpiredSession();
+      throw new Error(data.error || "No permission");
+    }
+
+    if (!res.ok || data.error) {
+      throw new Error(data.error || "Server error");
+    }
+
+    return data;
   }
 
   async function refreshDashboard() {
@@ -935,10 +1193,10 @@
     btn.disabled = true;
 
     try {
-      await loadKeys();
+      await loadAll();
       showNotice("Dashboard refreshed");
     } catch (err) {
-      showNotice("Refresh failed");
+      showNotice("Refresh failed: " + err.message);
     } finally {
       btn.innerText = oldText;
       btn.disabled = false;
@@ -946,18 +1204,7 @@
   }
 
   async function loadSessionRole() {
-    const res = await fetch("/admin/session", {
-      headers: {
-        "x-admin-token": getToken()
-      }
-    });
-
-    const data = await res.json();
-
-    if (res.status === 403 || data.error) {
-      handleExpiredSession();
-      return false;
-    }
+    const data = await apiGet("/admin/session");
 
     currentRole = data.role;
     localStorage.setItem("admin_role", currentRole);
@@ -992,7 +1239,7 @@
 
       showDashboard();
       applyRoleUI();
-      await loadKeys();
+      await loadAll();
 
       showNotice(currentRole === "admin" ? "Logged in as full admin" : "Logged in as moderator");
 
@@ -1006,48 +1253,30 @@
     document.getElementById("dashboard").classList.remove("hidden");
   }
 
-  async function loadKeys() {
-    if (isLoadingKeys) return;
-    isLoadingKeys = true;
-
-    const errorBox = document.getElementById("error");
-    const container = document.getElementById("keys");
+  async function loadAll() {
+    if (isLoading) return;
+    isLoading = true;
 
     try {
-      if (errorBox) errorBox.innerText = "";
-      if (container) container.innerHTML = "Loading...";
+      allKeys = await apiGet("/admin/keys");
+      allHistory = await apiGet("/admin/redeem-history");
 
-      const res = await fetch("/admin/keys", {
-        headers: {
-          "x-admin-token": getToken()
-        }
-      });
-
-      if (res.status === 403) {
-        handleExpiredSession();
-        throw new Error("Session expired");
+      try {
+        allUsers = await apiGet("/admin/users");
+      } catch (err) {
+        allUsers = [];
+        document.getElementById("usersError").innerText =
+          "Users could not load. Add the /admin/users endpoint to server.js.";
       }
 
-      if (!res.ok) {
-        throw new Error("Server error");
-      }
-
-      allKeys = await res.json();
       updateStats();
+      renderOverviewKeys();
       renderKeys();
+      renderUsers();
+      renderHistory();
 
-    } catch (err) {
-      if (errorBox) {
-        errorBox.innerText = "Error loading keys: " + err.message;
-      }
-
-      if (container) {
-        container.innerHTML = "<p style='color:rgba(255,255,255,0.55)'>Could not load keys.</p>";
-      }
-
-      throw err;
     } finally {
-      isLoadingKeys = false;
+      isLoading = false;
     }
   }
 
@@ -1063,54 +1292,213 @@
     document.getElementById("totalCredits").innerText = credits.toLocaleString();
   }
 
-  function renderKeys() {
-    const container = document.getElementById("keys");
+  function formatDate(value) {
+    return value ? new Date(value).toLocaleString() : "No date";
+  }
+
+  function maskKey(key) {
+    if (!key) return "N/A";
+    if (key.length <= 8) return key;
+    return key.slice(0, 6) + "..." + key.slice(-4);
+  }
+
+  function getFilteredKeys() {
     const query = document.getElementById("keySearch")?.value.toLowerCase() || "";
+    const filter = document.getElementById("keyFilter")?.value || "all";
 
-    const filtered = allKeys.filter(k => {
-      return JSON.stringify(k).toLowerCase().includes(query);
+    return allKeys.filter(k => {
+      const matchesSearch = JSON.stringify(k).toLowerCase().includes(query);
+      const matchesFilter =
+        filter === "all" ||
+        (filter === "used" && k.used) ||
+        (filter === "unused" && !k.used);
+
+      return matchesSearch && matchesFilter;
     });
+  }
 
-    container.innerHTML = "";
+  function renderOverviewKeys() {
+    const container = document.getElementById("overviewKeysMobile");
+    if (!container) return;
 
-    if (!filtered.length) {
+    const latest = allKeys.slice(0, 5);
+
+    if (!latest.length) {
       container.innerHTML = "<p style='color:rgba(255,255,255,0.55)'>No keys found.</p>";
       return;
     }
 
-    filtered.forEach(k => {
-      const div = document.createElement("div");
-      div.className = "key-card";
+    container.innerHTML = latest.map(k => `
+      <div class="mobile-card">
+        <div class="mobile-card-title">🔑 ${k.key}</div>
+        <div class="mobile-card-meta">
+          ${Number(k.credits || 0).toLocaleString()} credits<br>
+          ${formatDate(k.createdAt)}
+        </div>
+        <span class="pill ${k.used ? "used" : "unused"}">${k.used ? "USED" : "UNUSED"}</span>
+      </div>
+    `).join("");
+  }
 
+  function renderKeys() {
+    const table = document.getElementById("keysTable");
+    const mobile = document.getElementById("keysMobile");
+    const error = document.getElementById("keysError");
+
+    if (error) error.innerText = "";
+
+    const filtered = getFilteredKeys();
+
+    if (!filtered.length) {
+      table.innerHTML = `<tr><td colspan="6">No keys found.</td></tr>`;
+      mobile.innerHTML = `<p style="color:rgba(255,255,255,0.55)">No keys found.</p>`;
+      return;
+    }
+
+    table.innerHTML = filtered.map(k => {
       const deleteButton = isFullAdmin()
-        ? `<button class="copy-btn delete-key-btn" onclick="deleteKey('${k.key}')">Delete Key</button>`
+        ? `<button class="mini-btn danger" onclick="deleteKey('${k.key}')">Delete</button>`
         : "";
 
-      div.innerHTML = `
-        <div>
-          <div class="key-code">🔑 ${k.key}</div>
-          <div class="key-meta">
-            ${Number(k.credits || 0).toLocaleString()} credits<br>
-            ${k.createdAt ? new Date(k.createdAt).toLocaleString() : "No date"}
-          </div>
-          <button class="copy-btn" onclick="copyText('${k.key}')">Copy Key</button>
-          ${deleteButton}
-        </div>
+      return `
+        <tr>
+          <td class="mono">${k.key}</td>
+          <td>${Number(k.credits || 0).toLocaleString()}</td>
+          <td><span class="pill ${k.used ? "used" : "unused"}">${k.used ? "USED" : "UNUSED"}</span></td>
+          <td>${k.method || "unknown"}</td>
+          <td>${formatDate(k.createdAt)}</td>
+          <td>
+            <div class="action-row">
+              <button class="mini-btn" onclick="copyText('${k.key}')">Copy</button>
+              ${deleteButton}
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join("");
 
-        <div>
-          <span class="pill ${k.used ? "used" : "unused"}">
-            ${k.used ? "USED" : "UNUSED"}
-          </span>
+    mobile.innerHTML = filtered.map(k => {
+      const deleteButton = isFullAdmin()
+        ? `<button class="mini-btn danger" onclick="deleteKey('${k.key}')">Delete</button>`
+        : "";
+
+      return `
+        <div class="mobile-card">
+          <div class="mobile-card-title">🔑 ${k.key}</div>
+          <div class="mobile-card-meta">
+            ${Number(k.credits || 0).toLocaleString()} credits<br>
+            Method: ${k.method || "unknown"}<br>
+            ${formatDate(k.createdAt)}
+          </div>
+          <span class="pill ${k.used ? "used" : "unused"}">${k.used ? "USED" : "UNUSED"}</span>
+          <div class="action-row">
+            <button class="mini-btn" onclick="copyText('${k.key}')">Copy</button>
+            ${deleteButton}
+          </div>
         </div>
       `;
+    }).join("");
+  }
 
-      container.appendChild(div);
+  function renderUsers() {
+    const table = document.getElementById("usersTable");
+    const mobile = document.getElementById("usersMobile");
+    const query = document.getElementById("userSearch")?.value.toLowerCase() || "";
+
+    const filtered = allUsers.filter(u => {
+      return JSON.stringify(u).toLowerCase().includes(query);
     });
+
+    if (!filtered.length) {
+      table.innerHTML = `<tr><td colspan="3">No users found.</td></tr>`;
+      mobile.innerHTML = `<p style="color:rgba(255,255,255,0.55)">No users found.</p>`;
+      return;
+    }
+
+    table.innerHTML = filtered.map(u => `
+      <tr>
+        <td class="mono">${u.userId || "Unknown"}</td>
+        <td>${Number(u.credits || 0).toLocaleString()}</td>
+        <td>
+          <div class="action-row">
+            <button class="mini-btn" onclick="copyText('${u.userId || ""}')">Copy ID</button>
+            ${isFullAdmin() ? `<button class="mini-btn" onclick="fillAddCredits('${u.userId || ""}')">Add</button>` : ""}
+            ${isFullAdmin() ? `<button class="mini-btn danger" onclick="fillRemoveCredits('${u.userId || ""}')">Remove</button>` : ""}
+          </div>
+        </td>
+      </tr>
+    `).join("");
+
+    mobile.innerHTML = filtered.map(u => `
+      <div class="mobile-card">
+        <div class="mobile-card-title">👤 ${u.userId || "Unknown"}</div>
+        <div class="mobile-card-meta">
+          Credits: ${Number(u.credits || 0).toLocaleString()}
+        </div>
+        <div class="action-row">
+          <button class="mini-btn" onclick="copyText('${u.userId || ""}')">Copy ID</button>
+          ${isFullAdmin() ? `<button class="mini-btn" onclick="fillAddCredits('${u.userId || ""}')">Add</button>` : ""}
+          ${isFullAdmin() ? `<button class="mini-btn danger" onclick="fillRemoveCredits('${u.userId || ""}')">Remove</button>` : ""}
+        </div>
+      </div>
+    `).join("");
+  }
+
+  function renderHistory() {
+    const table = document.getElementById("historyTable");
+    const mobile = document.getElementById("historyMobile");
+    const query = document.getElementById("historySearch")?.value.toLowerCase() || "";
+
+    const filtered = allHistory.filter(h => {
+      return JSON.stringify(h).toLowerCase().includes(query);
+    });
+
+    if (!filtered.length) {
+      table.innerHTML = `<tr><td colspan="5">No history found.</td></tr>`;
+      mobile.innerHTML = `<p style="color:rgba(255,255,255,0.55)">No history found.</p>`;
+      return;
+    }
+
+    table.innerHTML = filtered.map(h => `
+      <tr>
+        <td><span class="pill blue">${h.type || h.action || "event"}</span></td>
+        <td class="mono">${h.userId || "N/A"}</td>
+        <td>${h.credits !== undefined ? Number(h.credits).toLocaleString() : "N/A"}</td>
+        <td class="mono">${maskKey(h.key)}</td>
+        <td>${formatDate(h.createdAt)}</td>
+      </tr>
+    `).join("");
+
+    mobile.innerHTML = filtered.map(h => `
+      <div class="mobile-card">
+        <div class="mobile-card-title">🧾 ${h.type || h.action || "event"}</div>
+        <div class="mobile-card-meta">
+          User: ${h.userId || "N/A"}<br>
+          Credits: ${h.credits !== undefined ? Number(h.credits).toLocaleString() : "N/A"}<br>
+          Key: ${maskKey(h.key)}<br>
+          ${formatDate(h.createdAt)}
+        </div>
+      </div>
+    `).join("");
   }
 
   function copyText(text) {
     navigator.clipboard.writeText(text);
-    showNotice("Copied key");
+    showNotice("Copied");
+  }
+
+  function fillAddCredits(userId) {
+    if (!isFullAdmin()) return;
+    document.getElementById("addUserId").value = userId;
+    showPage("credits");
+    showNotice("User ID added to Add Credits");
+  }
+
+  function fillRemoveCredits(userId) {
+    if (!isFullAdmin()) return;
+    document.getElementById("removeUserId").value = userId;
+    showPage("credits");
+    showNotice("User ID added to Remove Credits");
   }
 
   async function deleteKey(key) {
@@ -1124,33 +1512,11 @@
     if (!confirmDelete) return;
 
     try {
-      const res = await fetch("/admin/delete-key", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-admin-token": getToken()
-        },
-        body: JSON.stringify({ key })
-      });
-
-      const data = await res.json();
-
-      if (res.status === 403) {
-        showNotice(data.error || "No permission");
-        if (data.error === "Unauthorized") handleExpiredSession();
-        return;
-      }
-
-      if (!res.ok || data.error) {
-        showNotice(data.error || "Failed to delete key");
-        return;
-      }
-
+      await apiPost("/admin/delete-key", { key });
       showNotice("Key deleted");
-      await loadKeys();
-
+      await loadAll();
     } catch (err) {
-      showNotice("Server error deleting key");
+      showNotice(err.message || "Failed to delete key");
     }
   }
 
@@ -1167,41 +1533,26 @@
       return;
     }
 
-    const res = await fetch("/admin/generate-key", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-admin-token": getToken()
-      },
-      body: JSON.stringify({ credits })
-    });
+    try {
+      const data = await apiPost("/admin/generate-key", { credits });
 
-    const data = await res.json();
+      const box = document.getElementById("generatedResult");
+      box.style.display = "block";
+      box.innerHTML = `
+        Generated Key:<br>
+        ${data.key}<br><br>
+        Credits: ${data.credits}
+        <br><br>
+        <button class="mini-btn" onclick="copyText('${data.key}')">Copy Key</button>
+        <button class="mini-btn danger" onclick="deleteKey('${data.key}')">Delete Key</button>
+      `;
 
-    if (res.status === 403) {
-      showNotice(data.error || "No permission");
-      if (data.error === "Unauthorized") handleExpiredSession();
-      return;
+      showNotice("Key generated");
+      await loadAll();
+
+    } catch (err) {
+      showNotice(err.message || "Failed to generate key");
     }
-
-    if (!res.ok || data.error) {
-      showNotice(data.error || "Failed to generate key");
-      return;
-    }
-
-    const box = document.getElementById("generatedResult");
-    box.style.display = "block";
-    box.innerHTML = `
-      Generated Key:<br>
-      ${data.key}<br><br>
-      Credits: ${data.credits}
-      <br><br>
-      <button class="copy-btn" onclick="copyText('${data.key}')">Copy Key</button>
-      <button class="copy-btn delete-key-btn" onclick="deleteKey('${data.key}')">Delete Key</button>
-    `;
-
-    showNotice("Key generated");
-    await loadKeys();
   }
 
   async function addCredits() {
@@ -1218,30 +1569,13 @@
       return;
     }
 
-    const res = await fetch("/admin/add-credits", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-admin-token": getToken()
-      },
-      body: JSON.stringify({ userId, amount })
-    });
-
-    const data = await res.json();
-
-    if (res.status === 403) {
-      showNotice(data.error || "No permission");
-      if (data.error === "Unauthorized") handleExpiredSession();
-      return;
+    try {
+      const data = await apiPost("/admin/add-credits", { userId, amount });
+      showNotice(data.message || "Credits added");
+      await loadAll();
+    } catch (err) {
+      showNotice(err.message || "Failed to add credits");
     }
-
-    if (!res.ok || data.error) {
-      showNotice(data.error || "Failed to add credits");
-      return;
-    }
-
-    showNotice(data.message || "Credits added");
-    await loadKeys();
   }
 
   async function removeCredits() {
@@ -1258,30 +1592,13 @@
       return;
     }
 
-    const res = await fetch("/admin/remove-credits", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-admin-token": getToken()
-      },
-      body: JSON.stringify({ userId, amount })
-    });
-
-    const data = await res.json();
-
-    if (res.status === 403) {
-      showNotice(data.error || "No permission");
-      if (data.error === "Unauthorized") handleExpiredSession();
-      return;
+    try {
+      const data = await apiPost("/admin/remove-credits", { userId, amount });
+      showNotice(data.message || "Credits removed");
+      await loadAll();
+    } catch (err) {
+      showNotice(err.message || "Failed to remove credits");
     }
-
-    if (!res.ok || data.error) {
-      showNotice(data.error || "Failed to remove credits");
-      return;
-    }
-
-    showNotice(data.message || "Credits removed");
-    await loadKeys();
   }
 
   function logout() {
@@ -1293,11 +1610,9 @@
   if (getToken()) {
     showDashboard();
 
-    loadSessionRole().then(ok => {
-      if (ok) {
-        loadKeys().catch(() => {});
-      }
-    });
+    loadSessionRole()
+      .then(() => loadAll())
+      .catch(() => {});
   }
 </script>
 

@@ -603,7 +603,7 @@ app.post("/admin/login", (req, res) => {
 });
 
 // --------------------
-// CHECK ADMIN OR MOD
+// ADMIN SESSION HELPERS
 // --------------------
 function getSession(req) {
   const token = req.headers["x-admin-token"];
@@ -644,7 +644,7 @@ function checkFullAdmin(req, res) {
 }
 
 // --------------------
-// ADMIN: SESSION INFO
+// ADMIN/MOD: SESSION INFO
 // --------------------
 app.get("/admin/session", async (req, res) => {
   const session = checkPanelAccess(req, res);
@@ -698,6 +698,23 @@ app.get("/admin/keys", async (req, res) => {
     .toArray();
 
   res.json(keys);
+});
+
+// --------------------
+// ADMIN/MOD: GET USERS
+// --------------------
+app.get("/admin/users", async (req, res) => {
+  const session = checkPanelAccess(req, res);
+  if (!session) return;
+  if (!checkDB(req, res)) return;
+
+  const users = await usersCollection
+    .find({})
+    .sort({ credits: -1 })
+    .limit(100)
+    .toArray();
+
+  res.json(users);
 });
 
 // --------------------
