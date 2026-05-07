@@ -1,91 +1,672 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Payment Successful</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Payment Successful - MCALTS</title>
+
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
     body {
-      font-family: Arial;
-      background: #0f0f0f;
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      font-family: 'Inter', sans-serif;
       color: white;
+      background:
+        linear-gradient(to bottom, rgba(7, 7, 12, 0.25), rgba(7, 7, 12, 0.92)),
+        url("/hero-bg.jpg");
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+    }
+
+    body {
       display: flex;
-      justify-content: center;
       align-items: center;
-      height: 100vh;
-      text-align: center;
+      justify-content: center;
+      padding: 28px 18px;
     }
 
-    .box {
-      background: #1c1c1c;
-      padding: 40px;
-      border-radius: 12px;
-      min-width: 300px;
+    .page-wrap {
+      width: 100%;
+      max-width: 860px;
     }
 
-    h1 {
-      color: #00ff88;
+    .success-card {
+      position: relative;
+      overflow: hidden;
+      background: rgba(10, 10, 18, 0.92);
+      border: 1px solid rgba(128, 116, 255, 0.28);
+      border-radius: 28px;
+      padding: 34px;
+      box-shadow: 0 30px 70px rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(16px);
     }
 
-    button {
-      margin-top: 20px;
-      padding: 10px 20px;
-      border: none;
-      background: #00ff88;
-      cursor: pointer;
-      font-weight: bold;
-      border-radius: 6px;
+    .success-card::before {
+      content: "";
+      position: absolute;
+      inset: -120px auto auto -120px;
+      width: 240px;
+      height: 240px;
+      border-radius: 50%;
+      background: rgba(109, 92, 255, 0.16);
+      filter: blur(35px);
+      pointer-events: none;
     }
 
-    #key-box {
-      margin-top: 20px;
-      font-size: 18px;
+    .success-card::after {
+      content: "";
+      position: absolute;
+      right: -120px;
+      bottom: -120px;
+      width: 240px;
+      height: 240px;
+      border-radius: 50%;
+      background: rgba(0, 255, 170, 0.08);
+      filter: blur(35px);
+      pointer-events: none;
+    }
+
+    .top-row {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand img {
+      width: 54px;
+      height: 54px;
+      object-fit: contain;
+      border-radius: 14px;
+      filter: drop-shadow(0 0 14px rgba(109, 92, 255, 0.45));
+    }
+
+    .brand-text strong {
+      display: block;
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: 1px;
+    }
+
+    .brand-text span {
+      display: block;
+      margin-top: 4px;
+      color: rgba(255,255,255,0.58);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 800;
+      border: 1px solid rgba(46, 204, 113, 0.28);
+      background: rgba(46, 204, 113, 0.12);
+      color: #88f7b5;
+      white-space: nowrap;
+    }
+
+    .hero {
+      position: relative;
+      z-index: 2;
+      margin-top: 8px;
+      margin-bottom: 24px;
+    }
+
+    .hero h1 {
+      margin: 0 0 12px;
+      font-size: 48px;
+      line-height: 1.04;
+      font-weight: 900;
+      letter-spacing: -1px;
+    }
+
+    .hero p {
+      margin: 0;
+      color: rgba(255,255,255,0.72);
+      font-size: 17px;
+      line-height: 1.7;
+      max-width: 640px;
+    }
+
+    .content-box {
+      position: relative;
+      z-index: 2;
+      background: rgba(255,255,255,0.035);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 22px;
+      padding: 24px;
+    }
+
+    .loading-area,
+    .success-area,
+    .error-area {
+      display: none;
+    }
+
+    .loading-area.active,
+    .success-area.active,
+    .error-area.active {
+      display: block;
+    }
+
+    .loading-head {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .spinner {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 3px solid rgba(255,255,255,0.16);
+      border-top-color: #7c6cff;
+      animation: spin 0.9s linear infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .loading-title {
+      font-size: 24px;
+      font-weight: 800;
+    }
+
+    .loading-text {
+      color: rgba(255,255,255,0.7);
+      line-height: 1.7;
+      margin-bottom: 18px;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+
+    .progress-fill {
+      width: 38%;
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #7967ff, #20e38f);
+      animation: progressMove 1.6s ease-in-out infinite alternate;
+    }
+
+    @keyframes progressMove {
+      from {
+        transform: translateX(-10%);
+        width: 28%;
+      }
+      to {
+        transform: translateX(160%);
+        width: 40%;
+      }
+    }
+
+    .small-note {
+      color: rgba(255,255,255,0.48);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .key-section {
+      margin-bottom: 18px;
+    }
+
+    .success-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 28px;
+      font-weight: 900;
+      margin-bottom: 8px;
+      color: #26f59a;
+    }
+
+    .success-subtitle {
+      color: rgba(255,255,255,0.7);
+      line-height: 1.7;
+      margin-bottom: 18px;
+    }
+
+    .key-box {
+      background: linear-gradient(135deg, rgba(109, 92, 255, 0.18), rgba(32, 227, 143, 0.10));
+      border: 1px solid rgba(128, 116, 255, 0.35);
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 18px;
+    }
+
+    .key-label {
+      color: rgba(255,255,255,0.58);
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+    }
+
+    .key-value {
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      word-break: break-word;
+      margin-bottom: 14px;
+    }
+
+    .credits-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.08);
       color: #ffffff;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .steps {
+      display: grid;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .step {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .step-number {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(109, 92, 255, 0.18);
+      color: #d9d3ff;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .step-text {
+      color: rgba(255,255,255,0.78);
+      line-height: 1.6;
+      font-size: 14px;
+    }
+
+    .step-text code {
+      background: rgba(255,255,255,0.08);
+      padding: 3px 8px;
+      border-radius: 8px;
+      font-family: inherit;
+      color: #fff;
+      font-weight: 800;
+    }
+
+    .action-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 22px;
+    }
+
+    .btn {
+      height: 50px;
+      padding: 0 20px;
+      border: none;
+      border-radius: 14px;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: 0.2s ease;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #20f090, #13d67b);
+      color: #04140d;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 14px 28px rgba(32, 240, 144, 0.22);
+    }
+
+    .btn-secondary {
+      background: rgba(109, 92, 255, 0.10);
+      border: 1px solid rgba(128, 116, 255, 0.42);
+      color: #d5ceff;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(109, 92, 255, 0.16);
+    }
+
+    .btn-danger {
+      background: rgba(255, 88, 88, 0.08);
+      border: 1px solid rgba(255, 88, 88, 0.22);
+      color: #ffabab;
+    }
+
+    .btn-danger:hover {
+      background: rgba(255, 88, 88, 0.14);
+    }
+
+    .error-title {
+      font-size: 26px;
+      font-weight: 900;
+      margin-bottom: 10px;
+      color: #ff8d8d;
+    }
+
+    .error-text {
+      color: rgba(255,255,255,0.72);
+      line-height: 1.7;
+      margin-bottom: 18px;
+    }
+
+    .error-box {
+      background: rgba(255, 88, 88, 0.08);
+      border: 1px solid rgba(255, 88, 88, 0.18);
+      border-radius: 16px;
+      padding: 14px 16px;
+      color: #ffb1b1;
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 18px;
+      word-break: break-word;
+    }
+
+    .footer-note {
+      position: relative;
+      z-index: 2;
+      margin-top: 16px;
+      text-align: center;
+      color: rgba(255,255,255,0.45);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 700px) {
+      body {
+        padding: 16px;
+        background-attachment: scroll;
+      }
+
+      .success-card {
+        padding: 22px;
+        border-radius: 22px;
+      }
+
+      .top-row {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .hero h1 {
+        font-size: 34px;
+      }
+
+      .hero p {
+        font-size: 15px;
+      }
+
+      .key-value {
+        font-size: 22px;
+      }
+
+      .content-box {
+        padding: 18px;
+      }
+
+      .action-row {
+        flex-direction: column;
+      }
+
+      .btn {
+        width: 100%;
+      }
     }
   </style>
 </head>
-
 <body>
+  <div class="page-wrap">
+    <div class="success-card">
+      <div class="top-row">
+        <div class="brand">
+          <img src="/logo.png" alt="MCALTS Logo">
+          <div class="brand-text">
+            <strong>MCALTS</strong>
+            <span>Payment Complete</span>
+          </div>
+        </div>
 
-  <div class="box">
-    <h1>✅ Payment Successful!</h1>
-    <p>Your key has been generated below:</p>
+        <div class="status-badge">✔ Payment Received</div>
+      </div>
 
-    <h2 id="key-box">Generating your key...</h2>
+      <div class="hero">
+        <h1>Thanks for your purchase.</h1>
+        <p>
+          Your payment was successful. We’re now checking your order and generating your redeem key.
+        </p>
+      </div>
 
-    <button onclick="window.location.href='/'">
-      Back to Store
-    </button>
+      <div class="content-box">
+        <!-- Loading State -->
+        <div id="loadingArea" class="loading-area active">
+          <div class="loading-head">
+            <div class="spinner"></div>
+            <div class="loading-title">Generating your key...</div>
+          </div>
+
+          <div class="loading-text">
+            Your payment went through successfully. Your key should appear automatically in a few seconds.
+          </div>
+
+          <div class="progress-bar">
+            <div class="progress-fill"></div>
+          </div>
+
+          <div class="small-note">
+            Please keep this page open while we finish generating your key.
+          </div>
+
+          <div class="action-row">
+            <button class="btn btn-secondary" onclick="fetchKey(true)">Refresh Now</button>
+            <a class="btn btn-secondary" href="/">Back to Store</a>
+          </div>
+        </div>
+
+        <!-- Success State -->
+        <div id="successArea" class="success-area">
+          <div class="success-title">✅ Your key is ready</div>
+          <div class="success-subtitle">
+            Copy your redeem key below and use it in your Discord server.
+          </div>
+
+          <div class="key-section">
+            <div class="key-box">
+              <div class="key-label">Your Redeem Key</div>
+              <div id="keyValue" class="key-value">Loading...</div>
+              <div id="creditsPill" class="credits-pill">0 Credits</div>
+            </div>
+          </div>
+
+          <div class="steps">
+            <div class="step">
+              <div class="step-number">1</div>
+              <div class="step-text">Copy the key shown above.</div>
+            </div>
+            <div class="step">
+              <div class="step-number">2</div>
+              <div class="step-text">Go to your Discord server and type <code>/redeem</code>.</div>
+            </div>
+            <div class="step">
+              <div class="step-number">3</div>
+              <div class="step-text">Paste your key and redeem your credits.</div>
+            </div>
+          </div>
+
+          <div class="action-row">
+            <button class="btn btn-primary" onclick="copyKey()">Copy Key</button>
+            <a class="btn btn-secondary" href="/">Back to Store</a>
+          </div>
+        </div>
+
+        <!-- Error State -->
+        <div id="errorArea" class="error-area">
+          <div class="error-title">Something went wrong</div>
+          <div class="error-text">
+            We couldn’t load your key automatically on this page.
+          </div>
+
+          <div id="errorBox" class="error-box">
+            Unknown error.
+          </div>
+
+          <div class="action-row">
+            <button class="btn btn-secondary" onclick="fetchKey(true)">Try Again</button>
+            <a class="btn btn-danger" href="/">Back to Store</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-note">
+      If your key takes longer than expected, wait a few seconds and press <strong>Refresh Now</strong>.
+    </div>
   </div>
 
-<script>
-  const params = new URLSearchParams(window.location.search);
-  const session_id = params.get("session_id");
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get("session_id");
 
-  if (!session_id) {
-    document.getElementById("key-box").innerText =
-      "Error: missing session_id";
-    throw new Error("Missing session_id");
-  }
+    let pollCount = 0;
+    const maxPolls = 20;
+    let latestKey = "";
 
-  fetch(`/get-key-by-session?session_id=${session_id}`)
-    .then(res => res.json())
-    .then(data => {
-      if (!data || !data.key) {
-        document.getElementById("key-box").innerText =
-          "Key is still being generated... refresh in a few seconds.";
+    function showState(state) {
+      document.getElementById("loadingArea").classList.remove("active");
+      document.getElementById("successArea").classList.remove("active");
+      document.getElementById("errorArea").classList.remove("active");
+
+      if (state === "loading") {
+        document.getElementById("loadingArea").classList.add("active");
+      } else if (state === "success") {
+        document.getElementById("successArea").classList.add("active");
+      } else if (state === "error") {
+        document.getElementById("errorArea").classList.add("active");
+      }
+    }
+
+    function setError(message) {
+      document.getElementById("errorBox").innerText = message;
+      showState("error");
+    }
+
+    async function fetchKey(manual = false) {
+      if (!sessionId) {
+        setError("Missing session ID in the page URL.");
         return;
       }
 
-      document.getElementById("key-box").innerText =
-        `🎁 Your Key: ${data.key} (${data.credits} credits)`;
-    })
-    .catch(err => {
-      console.log(err);
-      document.getElementById("key-box").innerText =
-        "Server error generating key";
-    });
-</script>
+      if (manual) {
+        showState("loading");
+      }
 
+      try {
+        const res = await fetch(`/get-key-by-session?session_id=${encodeURIComponent(sessionId)}`);
+        const data = await res.json();
+
+        if (data && data.key) {
+          latestKey = data.key;
+          document.getElementById("keyValue").innerText = data.key;
+          document.getElementById("creditsPill").innerText = `${Number(data.credits || 0).toLocaleString()} Credits`;
+          showState("success");
+          return;
+        }
+
+        pollCount++;
+
+        if (pollCount >= maxPolls) {
+          setError("Your payment succeeded, but the key is still being generated. Please wait a few more seconds and press Try Again.");
+          return;
+        }
+
+        showState("loading");
+        setTimeout(fetchKey, 2500);
+
+      } catch (err) {
+        setError("Could not connect to the server. Please try again.");
+      }
+    }
+
+    async function copyKey() {
+      if (!latestKey) return;
+
+      try {
+        await navigator.clipboard.writeText(latestKey);
+        const btn = document.querySelector(".btn-primary");
+        const oldText = btn.innerText;
+        btn.innerText = "Copied!";
+        setTimeout(() => {
+          btn.innerText = oldText;
+        }, 1600);
+      } catch {
+        alert("Could not copy the key.");
+      }
+    }
+
+    fetchKey();
+  </script>
 </body>
 </html>
