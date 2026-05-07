@@ -21,14 +21,17 @@
 
   <!-- NAVBAR -->
   <header class="navbar">
-    <div class="nav-left">
+    <a class="nav-left" href="#top">
       <img src="/logo.png" alt="MCALTS Logo" class="site-logo">
-      <div class="brand-text">MCALTS</div>
-    </div>
+      <div>
+        <div class="brand-text">MCALTS</div>
+        <div class="brand-sub">Credits Store</div>
+      </div>
+    </a>
 
     <nav class="nav-links">
-      <a href="#top">Home</a>
       <a href="#products">Products</a>
+      <a href="#how">How it works</a>
       <a href="#reviews">Reviews</a>
       <a href="#faq">FAQ</a>
     </nav>
@@ -42,26 +45,29 @@
       <a class="discord-btn" href="https://discord.gg/PDJJK2byVP" target="_blank" rel="noopener noreferrer">
         Discord
       </a>
-
-      <button class="cart-btn">🛒</button>
     </div>
   </header>
 
   <!-- HERO -->
   <section class="hero" id="top">
-    <div class="hero-overlay"></div>
+    <div class="hero-card">
+      <div class="hero-badge">Instant redeem keys</div>
 
-    <div class="hero-content">
-      <h1>Welcome to MCALTS!</h1>
+      <h1>Buy MCALTS credits fast.</h1>
 
-      <div class="search-wrap">
-        <span class="search-icon">⌕</span>
-        <input
-          id="search"
-          type="text"
-          placeholder="Search for products..."
-          onkeyup="filterProducts()"
-        >
+      <p class="hero-text">
+        Choose a credit pack, pay securely by card or bank, then redeem your key in Discord.
+      </p>
+
+      <div class="hero-actions">
+        <a class="main-btn" href="#products">Shop Credits</a>
+        <a class="second-btn" href="https://discord.gg/PDJJK2byVP" target="_blank" rel="noopener noreferrer">Join Discord</a>
+      </div>
+
+      <div class="trust-row">
+        <div>⚡ Fast delivery</div>
+        <div>🔐 Secure checkout</div>
+        <div>🎁 Redeem keys</div>
       </div>
     </div>
   </section>
@@ -69,24 +75,37 @@
   <!-- SHOP -->
   <section class="shop-section" id="products">
     <div class="section-header">
-      <h2>Shop</h2>
-      <div class="underline"></div>
+      <div>
+        <h2>Shop Credits</h2>
+        <p>Pick a pack below. Card payments use Stripe and bank payments use GoCardless.</p>
+      </div>
+
+      <div class="search-wrap">
+        <span class="search-icon">⌕</span>
+        <input
+          id="search"
+          type="text"
+          placeholder="Search packs..."
+          onkeyup="filterProducts()"
+        >
+      </div>
     </div>
 
     <div class="products" id="product-list">
 
       <div class="card">
-        <div class="card-image">
+        <div class="card-top">
           <img src="/logo.png" alt="MCALTS">
         </div>
 
         <div class="card-bottom">
           <div class="card-row">
             <div class="card-price" data-gbp="1.00">£1.00</div>
-            <div class="badge in-stock">● In Stock</div>
+            <div class="badge in-stock">In Stock</div>
           </div>
 
           <h3>100 Credits</h3>
+          <p>Starter pack for quick testing.</p>
 
           <div class="payment-buttons">
             <button onclick="buyCredits(100)">Pay by Card</button>
@@ -96,17 +115,18 @@
       </div>
 
       <div class="card">
-        <div class="card-image">
+        <div class="card-top">
           <img src="/logo.png" alt="MCALTS">
         </div>
 
         <div class="card-bottom">
           <div class="card-row">
             <div class="card-price" data-gbp="1.80">£1.80</div>
-            <div class="badge in-stock">● In Stock</div>
+            <div class="badge in-stock">In Stock</div>
           </div>
 
           <h3>200 Credits</h3>
+          <p>A small pack with better value.</p>
 
           <div class="payment-buttons">
             <button onclick="buyCredits(200)">Pay by Card</button>
@@ -115,38 +135,19 @@
         </div>
       </div>
 
-      <div class="card featured">
-        <div class="card-image">
-          <img src="/logo.png" alt="MCALTS">
-        </div>
-
-        <div class="card-bottom">
-          <div class="card-row">
-            <div class="card-price" data-gbp="4.50">£4.50</div>
-            <div class="badge best-value">★ Best Value</div>
-          </div>
-
-          <h3>500 Credits</h3>
-
-          <div class="payment-buttons">
-            <button onclick="buyCredits(500)">Pay by Card</button>
-            <button class="bank-btn" onclick="buyCreditsBank(500)">Pay by Bank</button>
-          </div>
-        </div>
-      </div>
-
       <div class="card">
-        <div class="card-image">
+        <div class="card-top">
           <img src="/logo.png" alt="MCALTS">
         </div>
 
         <div class="card-bottom">
           <div class="card-row">
             <div class="card-price" data-gbp="2.70">£2.70</div>
-            <div class="badge in-stock">● In Stock</div>
+            <div class="badge in-stock">In Stock</div>
           </div>
 
           <h3>300 Credits</h3>
+          <p>Useful pack for regular use.</p>
 
           <div class="payment-buttons">
             <button onclick="buyCredits(300)">Pay by Card</button>
@@ -156,17 +157,18 @@
       </div>
 
       <div class="card">
-        <div class="card-image">
+        <div class="card-top">
           <img src="/logo.png" alt="MCALTS">
         </div>
 
         <div class="card-bottom">
           <div class="card-row">
             <div class="card-price" data-gbp="3.60">£3.60</div>
-            <div class="badge in-stock">● In Stock</div>
+            <div class="badge in-stock">In Stock</div>
           </div>
 
           <h3>400 Credits</h3>
+          <p>More credits for better value.</p>
 
           <div class="payment-buttons">
             <button onclick="buyCredits(400)">Pay by Card</button>
@@ -175,8 +177,31 @@
         </div>
       </div>
 
+      <div class="card featured">
+        <div class="featured-tag">Best Value</div>
+
+        <div class="card-top">
+          <img src="/logo.png" alt="MCALTS">
+        </div>
+
+        <div class="card-bottom">
+          <div class="card-row">
+            <div class="card-price" data-gbp="4.50">£4.50</div>
+            <div class="badge best-value">Popular</div>
+          </div>
+
+          <h3>500 Credits</h3>
+          <p>The most balanced pack.</p>
+
+          <div class="payment-buttons">
+            <button onclick="buyCredits(500)">Pay by Card</button>
+            <button class="bank-btn" onclick="buyCreditsBank(500)">Pay by Bank</button>
+          </div>
+        </div>
+      </div>
+
       <div class="card">
-        <div class="card-image">
+        <div class="card-top">
           <img src="/logo.png" alt="MCALTS">
         </div>
 
@@ -187,6 +212,7 @@
           </div>
 
           <h3>750 Credits</h3>
+          <p>Premium pack for bigger orders.</p>
 
           <div class="payment-buttons">
             <button onclick="buyCredits(750)">Pay by Card</button>
@@ -196,7 +222,7 @@
       </div>
 
       <div class="card">
-        <div class="card-image">
+        <div class="card-top">
           <img src="/logo.png" alt="MCALTS">
         </div>
 
@@ -207,6 +233,7 @@
           </div>
 
           <h3>1000 Credits</h3>
+          <p>Largest pack with the best total amount.</p>
 
           <div class="payment-buttons">
             <button onclick="buyCredits(1000)">Pay by Card</button>
@@ -218,11 +245,39 @@
     </div>
   </section>
 
+  <!-- HOW IT WORKS -->
+  <section class="how-section" id="how">
+    <div class="section-header simple">
+      <h2>How it works</h2>
+      <p>Simple checkout, instant key, easy redeem.</p>
+    </div>
+
+    <div class="how-grid">
+      <div class="how-card">
+        <div class="step-number">1</div>
+        <h3>Choose credits</h3>
+        <p>Select the credit pack you want from the store.</p>
+      </div>
+
+      <div class="how-card">
+        <div class="step-number">2</div>
+        <h3>Pay securely</h3>
+        <p>Use card checkout or Pay by Bank.</p>
+      </div>
+
+      <div class="how-card">
+        <div class="step-number">3</div>
+        <h3>Redeem key</h3>
+        <p>Use <strong>/redeem</strong> in Discord with your key.</p>
+      </div>
+    </div>
+  </section>
+
   <!-- REVIEWS -->
   <section class="reviews-section" id="reviews">
-    <div class="section-header">
+    <div class="section-header simple">
       <h2>Reviews</h2>
-      <div class="underline"></div>
+      <p>What customers say about MCALTS.</p>
     </div>
 
     <div class="reviews-grid">
@@ -248,9 +303,9 @@
 
   <!-- FAQ -->
   <section class="faq-section" id="faq">
-    <div class="section-header">
+    <div class="section-header simple">
       <h2>FAQ</h2>
-      <div class="underline"></div>
+      <p>Quick answers before you buy.</p>
     </div>
 
     <div class="faq-list">
@@ -261,7 +316,7 @@
 
       <div class="faq-item">
         <h4>How do I redeem the key?</h4>
-        <p>Use the /redeem command in Discord with your purchased key.</p>
+        <p>Use the <strong>/redeem</strong> command in Discord with your purchased key.</p>
       </div>
 
       <div class="faq-item">
@@ -272,20 +327,15 @@
   </section>
 
   <footer class="footer">
-    <p>© 2026 MCALTS. All rights reserved.</p>
+    <div class="footer-inner">
+      <div>
+        <strong>MCALTS</strong>
+        <p>© 2026 MCALTS. All rights reserved.</p>
+      </div>
+
+      <a href="https://discord.gg/PDJJK2byVP" target="_blank" rel="noopener noreferrer">Discord Support</a>
+    </div>
   </footer>
-
-  <script>
-    function filterProducts() {
-      const input = document.getElementById("search").value.toLowerCase();
-      const cards = document.querySelectorAll(".card");
-
-      cards.forEach(card => {
-        const text = card.innerText.toLowerCase();
-        card.style.display = text.includes(input) ? "" : "none";
-      });
-    }
-  </script>
 
   <script src="script.js"></script>
 </body>

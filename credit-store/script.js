@@ -18,6 +18,31 @@ function updateCurrency() {
   });
 }
 
+function filterProducts() {
+  const input = document.getElementById("search")?.value.toLowerCase() || "";
+  const cards = document.querySelectorAll(".card");
+
+  cards.forEach(card => {
+    const text = card.innerText.toLowerCase();
+    card.style.display = text.includes(input) ? "" : "none";
+  });
+}
+
+function setButtonsLoading(amount, isLoading) {
+  const buttons = document.querySelectorAll(`button[onclick*="${amount}"]`);
+
+  buttons.forEach(button => {
+    button.disabled = isLoading;
+
+    if (isLoading) {
+      button.dataset.oldText = button.innerText;
+      button.innerText = "Loading...";
+    } else {
+      button.innerText = button.dataset.oldText || button.innerText;
+    }
+  });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   const currencySelect = document.getElementById("currency");
 
@@ -25,9 +50,13 @@ document.addEventListener("DOMContentLoaded", () => {
     currencySelect.addEventListener("change", updateCurrency);
     updateCurrency();
   }
+
+  filterProducts();
 });
 
 async function buyCredits(amount) {
+  setButtonsLoading(amount, true);
+
   try {
     const res = await fetch("/create-checkout", {
       method: "POST",
@@ -60,10 +89,14 @@ async function buyCredits(amount) {
   } catch (err) {
     console.error("Fetch error:", err);
     alert("Server error. Try again.");
+  } finally {
+    setButtonsLoading(amount, false);
   }
 }
 
 async function buyCreditsBank(amount) {
+  setButtonsLoading(amount, true);
+
   try {
     const res = await fetch("/create-gocardless-checkout", {
       method: "POST",
@@ -96,5 +129,7 @@ async function buyCreditsBank(amount) {
   } catch (err) {
     console.error("GoCardless fetch error:", err);
     alert("Server error. Try again.");
+  } finally {
+    setButtonsLoading(amount, false);
   }
 }
