@@ -29,6 +29,18 @@ const API = "https://mcalts.co.uk";
 let adminToken = null;
 
 // --------------------
+// USER INFO HELPER
+// --------------------
+function getDiscordUserData(user) {
+  return {
+    userId: user.id,
+    username: user.username || "Unknown",
+    displayName: user.globalName || user.username || "Unknown",
+    avatarUrl: user.displayAvatarURL ? user.displayAvatarURL({ size: 128 }) : null
+  };
+}
+
+// --------------------
 // SAFE FETCH
 // --------------------
 async function safeFetchJSON(url, options = {}) {
@@ -305,13 +317,14 @@ client.on("interactionCreate", async (interaction) => {
     // --------------------
     if (interaction.commandName === "redeem") {
       const key = interaction.options.getString("key");
+      const userData = getDiscordUserData(interaction.user);
 
       const data = await safeFetchJSON(`${API}/redeem`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           key,
-          userId: interaction.user.id
+          ...userData
         })
       });
 
@@ -385,11 +398,12 @@ client.on("interactionCreate", async (interaction) => {
 
       const user = interaction.options.getUser("user");
       const amount = interaction.options.getInteger("amount");
+      const userData = getDiscordUserData(user);
 
       const data = await adminFetch("/admin/remove-credits", {
         method: "POST",
         body: JSON.stringify({
-          userId: user.id,
+          ...userData,
           amount
         })
       });
@@ -410,11 +424,12 @@ client.on("interactionCreate", async (interaction) => {
 
       const user = interaction.options.getUser("user");
       const amount = interaction.options.getInteger("amount");
+      const userData = getDiscordUserData(user);
 
       const data = await adminFetch("/admin/add-credits", {
         method: "POST",
         body: JSON.stringify({
-          userId: user.id,
+          ...userData,
           amount
         })
       });

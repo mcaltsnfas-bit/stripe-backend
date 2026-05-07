@@ -581,6 +581,52 @@
       word-break: break-all;
     }
 
+    .user-cell {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 240px;
+    }
+
+    .avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 13px;
+      object-fit: cover;
+      background: rgba(109, 92, 255, 0.18);
+      border: 1px solid rgba(128, 116, 255, 0.28);
+      flex-shrink: 0;
+    }
+
+    .avatar-fallback {
+      width: 38px;
+      height: 38px;
+      border-radius: 13px;
+      background: rgba(109, 92, 255, 0.18);
+      border: 1px solid rgba(128, 116, 255, 0.28);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      color: #ded9ff;
+      flex-shrink: 0;
+    }
+
+    .user-name {
+      font-weight: 900;
+      color: white;
+      line-height: 1.2;
+      word-break: break-word;
+    }
+
+    .user-id {
+      margin-top: 4px;
+      color: rgba(255,255,255,0.45);
+      font-size: 12px;
+      font-family: Consolas, Monaco, monospace;
+      word-break: break-all;
+    }
+
     .pill {
       display: inline-flex;
       padding: 7px 10px;
@@ -916,6 +962,7 @@
                   <th>Credits</th>
                   <th>Status</th>
                   <th>Method</th>
+                  <th>Used By</th>
                   <th>Created</th>
                   <th>Actions</th>
                 </tr>
@@ -936,15 +983,16 @@
           <p class="panel-subtitle">View users and their credit balances.</p>
 
           <div class="tools">
-            <input class="input" id="userSearch" placeholder="Search user ID..." onkeyup="renderUsers()">
+            <input class="input" id="userSearch" placeholder="Search username or user ID..." onkeyup="renderUsers()">
           </div>
 
           <div class="table-wrap">
             <table>
               <thead>
                 <tr>
-                  <th>User ID</th>
+                  <th>User</th>
                   <th>Credits</th>
+                  <th>Last Updated</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -1096,7 +1144,7 @@
         ? "Manage your store, generated keys, users, credits, and history."
         : "View your store stats, keys, users, and history in moderator mode.",
       keys: "Search, filter, copy, and manage redeem keys.",
-      users: "View users and credit balances.",
+      users: "View Discord usernames and credit balances.",
       credits: "Add or remove credits from users.",
       history: "View redeems, admin actions, and webhook events."
     };
@@ -1263,10 +1311,11 @@
 
       try {
         allUsers = await apiGet("/admin/users");
+        document.getElementById("usersError").innerText = "";
       } catch (err) {
         allUsers = [];
         document.getElementById("usersError").innerText =
-          "Users could not load. Add the /admin/users endpoint to server.js.";
+          "Users could not load. Make sure server.js has the /admin/users endpoint.";
       }
 
       updateStats();
@@ -1302,6 +1351,56 @@
     return key.slice(0, 6) + "..." + key.slice(-4);
   }
 
+  function getUserName(user) {
+    if (!user) return "Unknown User";
+    return user.displayName || user.username || user.name || user.userId || "Unknown User";
+  }
+
+  function getUserSubName(user) {
+    if (!user) return "";
+    if (user.username && user.displayName && user.username !== user.displayName) {
+      return `@${user.username}`;
+    }
+    if (user.username) {
+      return `@${user.username}`;
+    }
+    return "";
+  }
+
+  function getUserInitial(user) {
+    const name = getUserName(user);
+    return name ? name.charAt(0).toUpperCase() : "?";
+  }
+
+  function renderUserCell(user) {
+    const name = getUserName(user);
+    const subName = getUserSubName(user);
+    const userId = user?.userId || "Unknown ID";
+    const avatar = user?.avatarUrl
+      ? `<img class="avatar" src="${user.avatarUrl}" alt="">`
+      : `<div class="avatar-fallback">${getUserInitial(user)}</div>`;
+
+    return `
+      <div class="user-cell">
+        ${avatar}
+        <div>
+          <div class="user-name">${name}</div>
+          ${subName ? `<div class="user-id">${subName}</div>` : ""}
+          <div class="user-id">${userId}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  function getUsedByText(keyDoc) {
+    if (!keyDoc?.used) return "N/A";
+    return keyDoc.usedByDisplayName || keyDoc.usedByUsername || keyDoc.usedBy || "Unknown";
+  }
+
+  function getHistoryUserText(item) {
+    return item.displayName || item.username || item.userId || "N/A";
+  }
+
   function getFilteredKeys() {
     const query = document.getElementById("keySearch")?.value.toLowerCase() || "";
     const filter = document.getElementById("keyFilter")?.value || "all";
@@ -1333,6 +1432,7 @@
         <div class="mobile-card-title">🔑 ${k.key}</div>
         <div class="mobile-card-meta">
           ${Number(k.credits || 0).toLocaleString()} credits<br>
+          ${k.used ? `Used by: ${getUsedByText(k)}<br>` : ""}
           ${formatDate(k.createdAt)}
         </div>
         <span class="pill ${k.used ? "used" : "unused"}">${k.used ? "USED" : "UNUSED"}</span>
@@ -1350,7 +1450,7 @@
     const filtered = getFilteredKeys();
 
     if (!filtered.length) {
-      table.innerHTML = `<tr><td colspan="6">No keys found.</td></tr>`;
+      table.innerHTML = `<tr><td colspan="7">No keys found.</td></tr>`;
       mobile.innerHTML = `<p style="color:rgba(255,255,255,0.55)">No keys found.</p>`;
       return;
     }
@@ -1366,6 +1466,7 @@
           <td>${Number(k.credits || 0).toLocaleString()}</td>
           <td><span class="pill ${k.used ? "used" : "unused"}">${k.used ? "USED" : "UNUSED"}</span></td>
           <td>${k.method || "unknown"}</td>
+          <td>${getUsedByText(k)}</td>
           <td>${formatDate(k.createdAt)}</td>
           <td>
             <div class="action-row">
@@ -1387,7 +1488,9 @@
           <div class="mobile-card-title">🔑 ${k.key}</div>
           <div class="mobile-card-meta">
             ${Number(k.credits || 0).toLocaleString()} credits<br>
+            Status: ${k.used ? "USED" : "UNUSED"}<br>
             Method: ${k.method || "unknown"}<br>
+            Used by: ${getUsedByText(k)}<br>
             ${formatDate(k.createdAt)}
           </div>
           <span class="pill ${k.used ? "used" : "unused"}">${k.used ? "USED" : "UNUSED"}</span>
@@ -1410,15 +1513,16 @@
     });
 
     if (!filtered.length) {
-      table.innerHTML = `<tr><td colspan="3">No users found.</td></tr>`;
+      table.innerHTML = `<tr><td colspan="4">No users found.</td></tr>`;
       mobile.innerHTML = `<p style="color:rgba(255,255,255,0.55)">No users found.</p>`;
       return;
     }
 
     table.innerHTML = filtered.map(u => `
       <tr>
-        <td class="mono">${u.userId || "Unknown"}</td>
+        <td>${renderUserCell(u)}</td>
         <td>${Number(u.credits || 0).toLocaleString()}</td>
+        <td>${formatDate(u.updatedAt)}</td>
         <td>
           <div class="action-row">
             <button class="mini-btn" onclick="copyText('${u.userId || ""}')">Copy ID</button>
@@ -1431,9 +1535,10 @@
 
     mobile.innerHTML = filtered.map(u => `
       <div class="mobile-card">
-        <div class="mobile-card-title">👤 ${u.userId || "Unknown"}</div>
+        ${renderUserCell(u)}
         <div class="mobile-card-meta">
-          Credits: ${Number(u.credits || 0).toLocaleString()}
+          Credits: ${Number(u.credits || 0).toLocaleString()}<br>
+          Updated: ${formatDate(u.updatedAt)}
         </div>
         <div class="action-row">
           <button class="mini-btn" onclick="copyText('${u.userId || ""}')">Copy ID</button>
@@ -1462,7 +1567,7 @@
     table.innerHTML = filtered.map(h => `
       <tr>
         <td><span class="pill blue">${h.type || h.action || "event"}</span></td>
-        <td class="mono">${h.userId || "N/A"}</td>
+        <td>${getHistoryUserText(h)}</td>
         <td>${h.credits !== undefined ? Number(h.credits).toLocaleString() : "N/A"}</td>
         <td class="mono">${maskKey(h.key)}</td>
         <td>${formatDate(h.createdAt)}</td>
@@ -1473,7 +1578,7 @@
       <div class="mobile-card">
         <div class="mobile-card-title">🧾 ${h.type || h.action || "event"}</div>
         <div class="mobile-card-meta">
-          User: ${h.userId || "N/A"}<br>
+          User: ${getHistoryUserText(h)}<br>
           Credits: ${h.credits !== undefined ? Number(h.credits).toLocaleString() : "N/A"}<br>
           Key: ${maskKey(h.key)}<br>
           ${formatDate(h.createdAt)}

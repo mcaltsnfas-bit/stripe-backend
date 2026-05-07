@@ -135,6 +135,26 @@ function generateKey() {
 }
 
 // --------------------
+// USER PROFILE HELPERS
+// --------------------
+function buildUserProfile(body = {}) {
+  const profile = {};
+
+  if (body.username) profile.username = String(body.username);
+  if (body.displayName) profile.displayName = String(body.displayName);
+  if (body.avatarUrl) profile.avatarUrl = String(body.avatarUrl);
+
+  profile.updatedAt = Date.now();
+
+  return profile;
+}
+
+function getBestName(user) {
+  if (!user) return "Unknown";
+  return user.displayName || user.username || user.userId || "Unknown";
+}
+
+// --------------------
 // GOCARDLESS API HELPER
 // --------------------
 async function gocardlessRequest(path, method = "GET", body = null) {
@@ -714,7 +734,12 @@ app.get("/admin/users", async (req, res) => {
     .limit(100)
     .toArray();
 
-  res.json(users);
+  const cleanedUsers = users.map(user => ({
+    ...user,
+    name: getBestName(user)
+  }));
+
+  res.json(cleanedUsers);
 });
 
 // --------------------
@@ -764,14 +789,24 @@ app.post("/admin/add-credits", async (req, res) => {
     return res.status(400).json({ error: "Missing or invalid userId/amount" });
   }
 
+  const userProfile = buildUserProfile(req.body);
+
   await usersCollection.updateOne(
     { userId: String(userId) },
-    { $inc: { credits: creditAmount } },
+    {
+      $inc: { credits: creditAmount },
+      $set: {
+        userId: String(userId),
+        ...userProfile
+      }
+    },
     { upsert: true }
   );
 
   await historyCollection.insertOne({
     userId: String(userId),
+    username: userProfile.username || null,
+    displayName: userProfile.displayName || null,
     type: "admin_add",
     credits: creditAmount,
     createdAt: Date.now()
@@ -779,7 +814,7 @@ app.post("/admin/add-credits", async (req, res) => {
 
   res.json({
     success: true,
-    message: `Added ${creditAmount} credits to ${userId}`
+    message: `Added ${creditAmount} credits to ${userProfile.displayName || userProfile.username || userId}`
   });
 });
 
@@ -798,14 +833,24 @@ app.post("/admin/remove-credits", async (req, res) => {
     return res.status(400).json({ error: "Missing or invalid userId/amount" });
   }
 
+  const userProfile = buildUserProfile(req.body);
+
   await usersCollection.updateOne(
     { userId: String(userId) },
-    { $inc: { credits: -creditAmount } },
+    {
+      $inc: { credits: -creditAmount },
+      $set: {
+        userId: String(userId),
+        ...userProfile
+      }
+    },
     { upsert: true }
   );
 
   await historyCollection.insertOne({
     userId: String(userId),
+    username: userProfile.username || null,
+    displayName: userProfile.displayName || null,
     type: "admin_remove",
     credits: creditAmount,
     createdAt: Date.now()
@@ -813,7 +858,7 @@ app.post("/admin/remove-credits", async (req, res) => {
 
   res.json({
     success: true,
-    message: `Removed ${creditAmount} credits from ${userId}`
+    message: `Removed ${creditAmount} credits from ${userProfile.displayName || userProfile.username || userId}`
   });
 });
 
@@ -854,12 +899,16 @@ app.post("/redeem", async (req, res) => {
   if (!found) return res.status(400).json({ error: "Invalid key" });
   if (found.used) return res.status(400).json({ error: "Key already used" });
 
+  const userProfile = buildUserProfile(req.body);
+
   await keysCollection.updateOne(
     { key },
     {
       $set: {
         used: true,
         usedBy: String(userId),
+        usedByUsername: userProfile.username || null,
+        usedByDisplayName: userProfile.displayName || null,
         usedAt: Date.now()
       }
     }
@@ -867,12 +916,20 @@ app.post("/redeem", async (req, res) => {
 
   await usersCollection.updateOne(
     { userId: String(userId) },
-    { $inc: { credits: Number(found.credits) } },
+    {
+      $inc: { credits: Number(found.credits) },
+      $set: {
+        userId: String(userId),
+        ...userProfile
+      }
+    },
     { upsert: true }
   );
 
   await historyCollection.insertOne({
     userId: String(userId),
+    username: userProfile.username || null,
+    displayName: userProfile.displayName || null,
     type: "redeem",
     key,
     credits: Number(found.credits),
