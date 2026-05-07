@@ -428,9 +428,13 @@
 
     .grid {
       display: grid;
-      grid-template-columns: 390px 1fr;
+      grid-template-columns: repeat(2, minmax(280px, 1fr));
       gap: 20px;
       align-items: start;
+    }
+
+    .grid.three {
+      grid-template-columns: repeat(3, minmax(260px, 1fr));
     }
 
     .panel {
@@ -747,7 +751,8 @@
         margin-top: 18px;
       }
 
-      .grid {
+      .grid,
+      .grid.three {
         grid-template-columns: 1fr;
       }
 
@@ -836,7 +841,7 @@
 
       <div class="role-hint">
         Full admin can manage keys and credits.<br>
-        Moderator can view keys, users, and history.
+        Moderator can view keys, users, history, and balances.
       </div>
 
       <div class="password-wrap">
@@ -868,7 +873,7 @@
         <button class="side-link active" data-page="overview" onclick="showPage('overview')"><span>📊</span> Overview</button>
         <button class="side-link" data-page="keys" onclick="showPage('keys')"><span>🔑</span> Keys</button>
         <button class="side-link" data-page="users" onclick="showPage('users')"><span>👥</span> Users</button>
-        <button class="side-link admin-only" data-page="credits" onclick="showPage('credits')"><span>💳</span> Credits</button>
+        <button class="side-link" data-page="credits" onclick="showPage('credits')"><span>💳</span> Credits</button>
         <button class="side-link" data-page="history" onclick="showPage('history')"><span>🧾</span> History</button>
       </div>
 
@@ -888,7 +893,7 @@
       </div>
 
       <div id="modNote" class="mod-note hidden">
-        Moderator mode: you can view keys, users, and history, but you cannot generate/delete keys or add/remove credits.
+        Moderator mode: you can view keys, users, history, and balances, but you cannot generate/delete keys or add/remove credits.
       </div>
 
       <!-- OVERVIEW -->
@@ -980,7 +985,7 @@
       <section id="page-users" class="page">
         <div class="panel">
           <h3>Users</h3>
-          <p class="panel-subtitle">View users and their credit balances.</p>
+          <p class="panel-subtitle">View Discord usernames and credit balances.</p>
 
           <div class="tools">
             <input class="input" id="userSearch" placeholder="Search username or user ID..." onkeyup="renderUsers()">
@@ -1007,7 +1012,22 @@
 
       <!-- CREDITS -->
       <section id="page-credits" class="page">
-        <div class="grid">
+        <div class="grid three">
+
+          <div class="panel">
+            <h3>Balance Check</h3>
+            <p class="panel-subtitle">Check any Discord user's current credit balance.</p>
+
+            <div class="form-row">
+              <label>User ID</label>
+              <input class="input" type="text" id="balanceUserId" placeholder="Discord user ID">
+            </div>
+
+            <button class="small-btn" onclick="checkBalance()">Check Balance</button>
+
+            <div id="balanceResult" class="result-box"></div>
+          </div>
+
           <div class="panel admin-only">
             <h3>Add Credits</h3>
             <p class="panel-subtitle">Add credits directly to a Discord user ID.</p>
@@ -1041,6 +1061,7 @@
 
             <button class="small-btn danger-btn" onclick="removeCredits()">Remove Credits</button>
           </div>
+
         </div>
       </section>
 
@@ -1142,20 +1163,17 @@
     const subtitles = {
       overview: currentRole === "admin"
         ? "Manage your store, generated keys, users, credits, and history."
-        : "View your store stats, keys, users, and history in moderator mode.",
+        : "View your store stats, keys, users, history, and balances in moderator mode.",
       keys: "Search, filter, copy, and manage redeem keys.",
       users: "View Discord usernames and credit balances.",
-      credits: "Add or remove credits from users.",
+      credits: currentRole === "admin"
+        ? "Check balances, add credits, or remove credits."
+        : "Check user balances.",
       history: "View redeems, admin actions, and webhook events."
     };
 
     document.getElementById("pageTitle").innerText = titles[page] || "Dashboard";
     document.getElementById("dashboardSubtitle").innerText = subtitles[page] || "";
-
-    if (page === "credits" && !isFullAdmin()) {
-      showPage("overview");
-      showNotice("Moderator accounts cannot access credits tools");
-    }
   }
 
   function applyRoleUI() {
@@ -1372,6 +1390,10 @@
     return name ? name.charAt(0).toUpperCase() : "?";
   }
 
+  function findUserById(userId) {
+    return allUsers.find(u => String(u.userId) === String(userId));
+  }
+
   function renderUserCell(user) {
     const name = getUserName(user);
     const subName = getUserSubName(user);
@@ -1526,6 +1548,7 @@
         <td>
           <div class="action-row">
             <button class="mini-btn" onclick="copyText('${u.userId || ""}')">Copy ID</button>
+            <button class="mini-btn" onclick="fillBalanceCheck('${u.userId || ""}')">Balance</button>
             ${isFullAdmin() ? `<button class="mini-btn" onclick="fillAddCredits('${u.userId || ""}')">Add</button>` : ""}
             ${isFullAdmin() ? `<button class="mini-btn danger" onclick="fillRemoveCredits('${u.userId || ""}')">Remove</button>` : ""}
           </div>
@@ -1542,6 +1565,7 @@
         </div>
         <div class="action-row">
           <button class="mini-btn" onclick="copyText('${u.userId || ""}')">Copy ID</button>
+          <button class="mini-btn" onclick="fillBalanceCheck('${u.userId || ""}')">Balance</button>
           ${isFullAdmin() ? `<button class="mini-btn" onclick="fillAddCredits('${u.userId || ""}')">Add</button>` : ""}
           ${isFullAdmin() ? `<button class="mini-btn danger" onclick="fillRemoveCredits('${u.userId || ""}')">Remove</button>` : ""}
         </div>
@@ -1592,18 +1616,68 @@
     showNotice("Copied");
   }
 
+  function fillBalanceCheck(userId) {
+    document.getElementById("balanceUserId").value = userId;
+    showPage("credits");
+    showNotice("User ID added to Balance Check");
+  }
+
   function fillAddCredits(userId) {
     if (!isFullAdmin()) return;
+
     document.getElementById("addUserId").value = userId;
+    document.getElementById("balanceUserId").value = userId;
+
     showPage("credits");
-    showNotice("User ID added to Add Credits");
+    showNotice("User ID added to Credits tools");
   }
 
   function fillRemoveCredits(userId) {
     if (!isFullAdmin()) return;
+
     document.getElementById("removeUserId").value = userId;
+    document.getElementById("balanceUserId").value = userId;
+
     showPage("credits");
-    showNotice("User ID added to Remove Credits");
+    showNotice("User ID added to Credits tools");
+  }
+
+  async function checkBalance() {
+    const userId = document.getElementById("balanceUserId").value.trim();
+    const box = document.getElementById("balanceResult");
+
+    if (!userId) {
+      showNotice("Enter a Discord user ID");
+      return;
+    }
+
+    try {
+      const res = await fetch(`/balance?userId=${encodeURIComponent(userId)}`);
+      const data = await res.json();
+
+      if (!res.ok || data.error) {
+        showNotice(data.error || "Failed to check balance");
+        return;
+      }
+
+      const knownUser = findUserById(userId);
+      const name = knownUser ? getUserName(knownUser) : "Unknown User";
+      const subName = knownUser ? getUserSubName(knownUser) : "";
+
+      box.style.display = "block";
+      box.innerHTML = `
+        User:<br>
+        ${name}${subName ? ` (${subName})` : ""}<br><br>
+        User ID:<br>
+        ${userId}<br><br>
+        Balance: ${Number(data.credits || 0).toLocaleString()} credits
+      `;
+
+      showNotice("Balance loaded");
+
+    } catch (err) {
+      showNotice("Server error checking balance");
+    }
   }
 
   async function deleteKey(key) {
