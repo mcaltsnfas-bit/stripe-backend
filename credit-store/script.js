@@ -1,5 +1,17 @@
 const GBP_TO_USD = 1.25;
 
+const PRODUCTS = {
+  100: { credits: 100, gbp: 1.00 },
+  200: { credits: 200, gbp: 1.80 },
+  300: { credits: 300, gbp: 2.70 },
+  400: { credits: 400, gbp: 3.60 },
+  500: { credits: 500, gbp: 4.50 },
+  750: { credits: 750, gbp: 6.50 },
+  1000: { credits: 1000, gbp: 8.00 }
+};
+
+let selectedCredits = null;
+
 function showToast(message) {
   const toast = document.getElementById("toast");
 
@@ -32,8 +44,17 @@ function closeMobileMenu() {
   menu.classList.remove("open");
 }
 
-function updateCurrency() {
+function formatPrice(gbp) {
   const currency = document.getElementById("currency")?.value || "GBP";
+
+  if (currency === "USD") {
+    return `$${(gbp * GBP_TO_USD).toFixed(2)}`;
+  }
+
+  return `£${gbp.toFixed(2)}`;
+}
+
+function updateCurrency() {
   const prices = document.querySelectorAll(".card-price");
 
   prices.forEach(price => {
@@ -41,13 +62,12 @@ function updateCurrency() {
 
     if (!gbp) return;
 
-    if (currency === "USD") {
-      const usd = gbp * GBP_TO_USD;
-      price.innerText = `$${usd.toFixed(2)}`;
-    } else {
-      price.innerText = `£${gbp.toFixed(2)}`;
-    }
+    price.innerText = formatPrice(gbp);
   });
+
+  if (selectedCredits && PRODUCTS[selectedCredits]) {
+    document.getElementById("checkoutPrice").innerText = formatPrice(PRODUCTS[selectedCredits].gbp);
+  }
 }
 
 function filterProducts() {
@@ -73,17 +93,65 @@ function filterProducts() {
   }
 }
 
-function setButtonLoading(button, isLoading) {
+function setButtonLoading(button, isLoading, text = "Loading...") {
   if (!button) return;
 
   button.disabled = isLoading;
 
   if (isLoading) {
     button.dataset.oldText = button.innerText;
-    button.innerText = "Loading...";
+    button.innerText = text;
   } else {
     button.innerText = button.dataset.oldText || button.innerText;
   }
+}
+
+function openCheckout(amount) {
+  const product = PRODUCTS[amount];
+
+  if (!product) {
+    showToast("Invalid product selected.");
+    return;
+  }
+
+  selectedCredits = amount;
+
+  document.getElementById("checkoutTitle").innerText = `${amount} Credits`;
+  document.getElementById("checkoutPrice").innerText = formatPrice(product.gbp);
+
+  const overlay = document.getElementById("checkoutOverlay");
+  overlay.classList.add("open");
+}
+
+function closeCheckout() {
+  const overlay = document.getElementById("checkoutOverlay");
+  overlay.classList.remove("open");
+}
+
+function closeCheckoutFromOverlay(event) {
+  if (event.target.id === "checkoutOverlay") {
+    closeCheckout();
+  }
+}
+
+async function paySelectedBank() {
+  if (!selectedCredits) {
+    showToast("Choose a product first.");
+    return;
+  }
+
+  const button = document.getElementById("bankPayBtn");
+  await buyCreditsBank(selectedCredits, button);
+}
+
+async function paySelectedCard() {
+  if (!selectedCredits) {
+    showToast("Choose a product first.");
+    return;
+  }
+
+  const button = document.getElementById("cardPayBtn");
+  await buyCredits(selectedCredits, button);
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -109,10 +177,17 @@ document.addEventListener("DOMContentLoaded", () => {
       menu.classList.remove("open");
     }
   });
+
+  document.addEventListener("keydown", event => {
+    if (event.key === "Escape") {
+      closeCheckout();
+      closeMobileMenu();
+    }
+  });
 });
 
 async function buyCredits(amount, button = null) {
-  setButtonLoading(button, true);
+  setButtonLoading(button, true, "Opening card...");
 
   try {
     const res = await fetch("/create-checkout", {
@@ -152,7 +227,7 @@ async function buyCredits(amount, button = null) {
 }
 
 async function buyCreditsBank(amount, button = null) {
-  setButtonLoading(button, true);
+  setButtonLoading(button, true, "Opening bank...");
 
   try {
     const res = await fetch("/create-gocardless-checkout", {

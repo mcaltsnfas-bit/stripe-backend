@@ -29,7 +29,7 @@
       </div>
     </a>
 
-    <nav class="nav-links" id="navLinks">
+    <nav class="nav-links">
       <a href="#products">Products</a>
       <a href="#how">How it works</a>
       <a href="#reviews">Reviews</a>
@@ -60,26 +60,50 @@
 
   <!-- HERO -->
   <section class="hero" id="top">
-    <div class="hero-card">
-      <div class="hero-badge">Instant redeem keys</div>
+    <div class="hero-inner">
+      <div class="hero-left">
+        <div class="hero-badge">⚡ Instant redeem keys</div>
 
-      <h1>Buy MCALTS credits fast.</h1>
+        <h1>Buy MCALTS credits with a clean checkout.</h1>
 
-      <p class="hero-text">
-        Choose a credit pack, pay securely, and redeem your key in Discord.
-      </p>
+        <p class="hero-text">
+          Pick a credit pack, pay securely, then redeem your key in Discord using <strong>/redeem</strong>.
+        </p>
 
-      <div class="hero-actions">
-        <a class="main-btn" href="#products">Shop Credits</a>
-        <a class="second-btn" href="https://discord.gg/PDJJK2byVP" target="_blank" rel="noopener noreferrer">
-          Join Discord
-        </a>
+        <div class="hero-actions">
+          <a class="main-btn" href="#products">Shop Credits</a>
+          <a class="second-btn" href="https://discord.gg/PDJJK2byVP" target="_blank" rel="noopener noreferrer">
+            Join Discord
+          </a>
+        </div>
+
+        <div class="trust-row">
+          <div>🏦 Pay by Bank</div>
+          <div>💳 Card fallback</div>
+          <div>🎁 Key on success page</div>
+        </div>
       </div>
 
-      <div class="trust-row">
-        <div>⚡ Fast delivery</div>
-        <div>🏦 Pay by bank</div>
-        <div>🎁 Redeem keys</div>
+      <div class="hero-preview">
+        <div class="preview-card">
+          <div class="preview-top">
+            <img src="/logo.png" alt="MCALTS">
+            <div>
+              <span>Featured Pack</span>
+              <strong>500 Credits</strong>
+            </div>
+          </div>
+
+          <div class="preview-price">£4.50</div>
+
+          <div class="preview-lines">
+            <div></div>
+            <div></div>
+            <div></div>
+          </div>
+
+          <a href="#products" class="preview-btn">View Packs</a>
+        </div>
       </div>
     </div>
   </section>
@@ -89,9 +113,9 @@
     <div class="section-header">
       <div>
         <span class="section-kicker">Store</span>
-        <h2>Shop Credits</h2>
+        <h2>Choose your credits</h2>
         <p>
-          Pick a credit pack below. Pay by Bank is the main option. Card payment is there if your bank is not listed.
+          One simple buy button. You can pay by bank first, or use card if your bank does not show.
         </p>
       </div>
 
@@ -118,19 +142,13 @@
         <div class="card-bottom">
           <div class="card-row">
             <div class="card-price" data-gbp="1.00">£1.00</div>
-            <div class="badge in-stock">In Stock</div>
+            <div class="badge green">In Stock</div>
           </div>
 
           <h3>100 Credits</h3>
           <p>Starter pack for quick testing.</p>
 
-          <div class="product-actions">
-            <button onclick="buyCreditsBank(100, this)">Pay</button>
-            <div class="fallback-text">
-              Bank not showing?
-              <button class="text-pay-btn" onclick="buyCredits(100, this)">Pay by card instead</button>
-            </div>
-          </div>
+          <button class="buy-btn" onclick="openCheckout(100)">Buy Credits</button>
         </div>
       </div>
 
@@ -142,19 +160,13 @@
         <div class="card-bottom">
           <div class="card-row">
             <div class="card-price" data-gbp="1.80">£1.80</div>
-            <div class="badge in-stock">In Stock</div>
+            <div class="badge green">In Stock</div>
           </div>
 
           <h3>200 Credits</h3>
           <p>A small pack with better value.</p>
 
-          <div class="product-actions">
-            <button onclick="buyCreditsBank(200, this)">Pay</button>
-            <div class="fallback-text">
-              Bank not showing?
-              <button class="text-pay-btn" onclick="buyCredits(200, this)">Pay by card instead</button>
-            </div>
-          </div>
+          <button class="buy-btn" onclick="openCheckout(200)">Buy Credits</button>
         </div>
       </div>
 
@@ -166,19 +178,13 @@
         <div class="card-bottom">
           <div class="card-row">
             <div class="card-price" data-gbp="2.70">£2.70</div>
-            <div class="badge in-stock">In Stock</div>
+            <div class="badge green">In Stock</div>
           </div>
 
           <h3>300 Credits</h3>
           <p>Useful pack for regular use.</p>
 
-          <div class="product-actions">
-            <button onclick="buyCreditsBank(300, this)">Pay</button>
-            <div class="fallback-text">
-              Bank not showing?
-              <button class="text-pay-btn" onclick="buyCredits(300, this)">Pay by card instead</button>
-            </div>
-          </div>
+          <button class="buy-btn" onclick="openCheckout(300)">Buy Credits</button>
         </div>
       </div>
 
@@ -190,19 +196,13 @@
         <div class="card-bottom">
           <div class="card-row">
             <div class="card-price" data-gbp="3.60">£3.60</div>
-            <div class="badge in-stock">In Stock</div>
+            <div class="badge green">In Stock</div>
           </div>
 
           <h3>400 Credits</h3>
           <p>More credits for better value.</p>
 
-          <div class="product-actions">
-            <button onclick="buyCreditsBank(400, this)">Pay</button>
-            <div class="fallback-text">
-              Bank not showing?
-              <button class="text-pay-btn" onclick="buyCredits(400, this)">Pay by card instead</button>
-            </div>
-          </div>
+          <button class="buy-btn" onclick="openCheckout(400)">Buy Credits</button>
         </div>
       </div>
 
@@ -216,19 +216,13 @@
         <div class="card-bottom">
           <div class="card-row">
             <div class="card-price" data-gbp="4.50">£4.50</div>
-            <div class="badge best-value">Popular</div>
+            <div class="badge purple">Popular</div>
           </div>
 
           <h3>500 Credits</h3>
           <p>The most balanced pack.</p>
 
-          <div class="product-actions">
-            <button onclick="buyCreditsBank(500, this)">Pay</button>
-            <div class="fallback-text">
-              Bank not showing?
-              <button class="text-pay-btn" onclick="buyCredits(500, this)">Pay by card instead</button>
-            </div>
-          </div>
+          <button class="buy-btn" onclick="openCheckout(500)">Buy Credits</button>
         </div>
       </div>
 
@@ -240,19 +234,13 @@
         <div class="card-bottom">
           <div class="card-row">
             <div class="card-price" data-gbp="6.50">£6.50</div>
-            <div class="badge premium">Premium</div>
+            <div class="badge gold">Premium</div>
           </div>
 
           <h3>750 Credits</h3>
           <p>Premium pack for bigger orders.</p>
 
-          <div class="product-actions">
-            <button onclick="buyCreditsBank(750, this)">Pay</button>
-            <div class="fallback-text">
-              Bank not showing?
-              <button class="text-pay-btn" onclick="buyCredits(750, this)">Pay by card instead</button>
-            </div>
-          </div>
+          <button class="buy-btn" onclick="openCheckout(750)">Buy Credits</button>
         </div>
       </div>
 
@@ -264,19 +252,13 @@
         <div class="card-bottom">
           <div class="card-row">
             <div class="card-price" data-gbp="8.00">£8.00</div>
-            <div class="badge premium">Premium</div>
+            <div class="badge gold">Premium</div>
           </div>
 
           <h3>1000 Credits</h3>
           <p>Largest pack with the best total amount.</p>
 
-          <div class="product-actions">
-            <button onclick="buyCreditsBank(1000, this)">Pay</button>
-            <div class="fallback-text">
-              Bank not showing?
-              <button class="text-pay-btn" onclick="buyCredits(1000, this)">Pay by card instead</button>
-            </div>
-          </div>
+          <button class="buy-btn" onclick="openCheckout(1000)">Buy Credits</button>
         </div>
       </div>
 
@@ -292,26 +274,26 @@
     <div class="section-header simple">
       <span class="section-kicker">Steps</span>
       <h2>How it works</h2>
-      <p>Simple checkout, instant key, easy redeem.</p>
+      <p>Three quick steps from checkout to redeeming.</p>
     </div>
 
     <div class="how-grid">
       <div class="how-card">
         <div class="step-number">1</div>
-        <h3>Choose credits</h3>
-        <p>Select the credit pack you want from the store.</p>
+        <h3>Choose a pack</h3>
+        <p>Select the amount of credits you want from the store.</p>
       </div>
 
       <div class="how-card">
         <div class="step-number">2</div>
-        <h3>Pay</h3>
-        <p>Click Pay to use Pay by Bank. If your bank is not listed, use card instead.</p>
+        <h3>Pay securely</h3>
+        <p>Use Pay by Bank, or card if your bank is not available.</p>
       </div>
 
       <div class="how-card">
         <div class="step-number">3</div>
-        <h3>Redeem key</h3>
-        <p>Use <strong>/redeem</strong> in Discord with your key.</p>
+        <h3>Redeem in Discord</h3>
+        <p>Use <strong>/redeem</strong> with the key shown after payment.</p>
       </div>
     </div>
   </section>
@@ -361,7 +343,7 @@
 
       <div class="faq-item">
         <h4>What if my bank does not show?</h4>
-        <p>Click the card payment option under the Pay button and use Stripe checkout instead.</p>
+        <p>Use the card payment button in the checkout popup instead.</p>
       </div>
 
       <div class="faq-item">
@@ -386,6 +368,36 @@
       <a href="https://discord.gg/PDJJK2byVP" target="_blank" rel="noopener noreferrer">Discord Support</a>
     </div>
   </footer>
+
+  <!-- CHECKOUT MODAL -->
+  <div id="checkoutOverlay" class="checkout-overlay" onclick="closeCheckoutFromOverlay(event)">
+    <div class="checkout-modal">
+      <button class="checkout-close" onclick="closeCheckout()">×</button>
+
+      <div class="checkout-logo-wrap">
+        <img src="/logo.png" alt="MCALTS">
+      </div>
+
+      <h2 id="checkoutTitle">500 Credits</h2>
+      <p id="checkoutPrice">£4.50</p>
+
+      <div class="checkout-info">
+        Your redeem key will appear on the success page after payment.
+      </div>
+
+      <button id="bankPayBtn" class="checkout-bank-btn" onclick="paySelectedBank()">
+        Pay by Bank
+      </button>
+
+      <button id="cardPayBtn" class="checkout-card-btn" onclick="paySelectedCard()">
+        My bank is not showing — Pay by Card
+      </button>
+
+      <p class="checkout-small">
+        Bank payment is the main option. Card checkout is available as a fallback.
+      </p>
+    </div>
+  </div>
 
   <div id="toast" class="toast"></div>
 
