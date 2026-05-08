@@ -21,7 +21,7 @@
 
   <!-- NAVBAR -->
   <header class="navbar">
-    <a class="nav-left" href="#top">
+    <a class="nav-left" href="#top" aria-label="Go to top">
       <img src="/logo.png" alt="MCALTS Logo" class="site-logo">
       <div>
         <div class="brand-text">MCALTS</div>
@@ -29,7 +29,7 @@
       </div>
     </a>
 
-    <nav class="nav-links">
+    <nav class="nav-links" id="navLinks">
       <a href="#products">Products</a>
       <a href="#how">How it works</a>
       <a href="#reviews">Reviews</a>
@@ -37,7 +37,7 @@
     </nav>
 
     <div class="nav-right">
-      <select id="currency" class="currency-select">
+      <select id="currency" class="currency-select" aria-label="Choose currency">
         <option value="GBP">£ GBP</option>
         <option value="USD">$ USD</option>
       </select>
@@ -45,8 +45,18 @@
       <a class="discord-btn" href="https://discord.gg/PDJJK2byVP" target="_blank" rel="noopener noreferrer">
         Discord
       </a>
+
+      <button class="menu-btn" onclick="toggleMobileMenu()" aria-label="Open menu">☰</button>
     </div>
   </header>
+
+  <!-- MOBILE MENU -->
+  <div id="mobileMenu" class="mobile-menu">
+    <a href="#products" onclick="closeMobileMenu()">Products</a>
+    <a href="#how" onclick="closeMobileMenu()">How it works</a>
+    <a href="#reviews" onclick="closeMobileMenu()">Reviews</a>
+    <a href="#faq" onclick="closeMobileMenu()">FAQ</a>
+  </div>
 
   <!-- HERO -->
   <section class="hero" id="top">
@@ -56,12 +66,14 @@
       <h1>Buy MCALTS credits fast.</h1>
 
       <p class="hero-text">
-        Choose a credit pack, pay by bank, then redeem your key in Discord.
+        Choose a credit pack, pay securely, and redeem your key in Discord.
       </p>
 
       <div class="hero-actions">
         <a class="main-btn" href="#products">Shop Credits</a>
-        <a class="second-btn" href="https://discord.gg/PDJJK2byVP" target="_blank" rel="noopener noreferrer">Join Discord</a>
+        <a class="second-btn" href="https://discord.gg/PDJJK2byVP" target="_blank" rel="noopener noreferrer">
+          Join Discord
+        </a>
       </div>
 
       <div class="trust-row">
@@ -76,24 +88,29 @@
   <section class="shop-section" id="products">
     <div class="section-header">
       <div>
+        <span class="section-kicker">Store</span>
         <h2>Shop Credits</h2>
-        <p>Pick a pack below. Pay by Bank is the main checkout option. Card payment is available if your bank is not listed.</p>
+        <p>
+          Pick a credit pack below. Pay by Bank is the main option. Card payment is there if your bank is not listed.
+        </p>
       </div>
 
-      <div class="search-wrap">
-        <span class="search-icon">⌕</span>
-        <input
-          id="search"
-          type="text"
-          placeholder="Search packs..."
-          onkeyup="filterProducts()"
-        >
+      <div class="shop-tools">
+        <div class="search-wrap">
+          <span class="search-icon">⌕</span>
+          <input
+            id="search"
+            type="text"
+            placeholder="Search packs..."
+            onkeyup="filterProducts()"
+          >
+        </div>
       </div>
     </div>
 
     <div class="products" id="product-list">
 
-      <div class="card">
+      <div class="card" data-product="100 credits starter pack">
         <div class="card-top">
           <img src="/logo.png" alt="MCALTS">
         </div>
@@ -107,16 +124,17 @@
           <h3>100 Credits</h3>
           <p>Starter pack for quick testing.</p>
 
-          <div class="payment-buttons">
-            <button onclick="buyCreditsBank(100)">Pay</button>
+          <div class="product-actions">
+            <button onclick="buyCreditsBank(100, this)">Pay</button>
             <div class="fallback-text">
-              Bank not showing? <button class="text-pay-btn" onclick="buyCredits(100)">Pay by card instead</button>
+              Bank not showing?
+              <button class="text-pay-btn" onclick="buyCredits(100, this)">Pay by card instead</button>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="card">
+      <div class="card" data-product="200 credits small value pack">
         <div class="card-top">
           <img src="/logo.png" alt="MCALTS">
         </div>
@@ -130,16 +148,17 @@
           <h3>200 Credits</h3>
           <p>A small pack with better value.</p>
 
-          <div class="payment-buttons">
-            <button onclick="buyCreditsBank(200)">Pay</button>
+          <div class="product-actions">
+            <button onclick="buyCreditsBank(200, this)">Pay</button>
             <div class="fallback-text">
-              Bank not showing? <button class="text-pay-btn" onclick="buyCredits(200)">Pay by card instead</button>
+              Bank not showing?
+              <button class="text-pay-btn" onclick="buyCredits(200, this)">Pay by card instead</button>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="card">
+      <div class="card" data-product="300 credits regular pack">
         <div class="card-top">
           <img src="/logo.png" alt="MCALTS">
         </div>
@@ -153,16 +172,17 @@
           <h3>300 Credits</h3>
           <p>Useful pack for regular use.</p>
 
-          <div class="payment-buttons">
-            <button onclick="buyCreditsBank(300)">Pay</button>
+          <div class="product-actions">
+            <button onclick="buyCreditsBank(300, this)">Pay</button>
             <div class="fallback-text">
-              Bank not showing? <button class="text-pay-btn" onclick="buyCredits(300)">Pay by card instead</button>
+              Bank not showing?
+              <button class="text-pay-btn" onclick="buyCredits(300, this)">Pay by card instead</button>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="card">
+      <div class="card" data-product="400 credits value pack">
         <div class="card-top">
           <img src="/logo.png" alt="MCALTS">
         </div>
@@ -176,16 +196,17 @@
           <h3>400 Credits</h3>
           <p>More credits for better value.</p>
 
-          <div class="payment-buttons">
-            <button onclick="buyCreditsBank(400)">Pay</button>
+          <div class="product-actions">
+            <button onclick="buyCreditsBank(400, this)">Pay</button>
             <div class="fallback-text">
-              Bank not showing? <button class="text-pay-btn" onclick="buyCredits(400)">Pay by card instead</button>
+              Bank not showing?
+              <button class="text-pay-btn" onclick="buyCredits(400, this)">Pay by card instead</button>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="card featured">
+      <div class="card featured" data-product="500 credits popular best value">
         <div class="featured-tag">Best Value</div>
 
         <div class="card-top">
@@ -201,16 +222,17 @@
           <h3>500 Credits</h3>
           <p>The most balanced pack.</p>
 
-          <div class="payment-buttons">
-            <button onclick="buyCreditsBank(500)">Pay</button>
+          <div class="product-actions">
+            <button onclick="buyCreditsBank(500, this)">Pay</button>
             <div class="fallback-text">
-              Bank not showing? <button class="text-pay-btn" onclick="buyCredits(500)">Pay by card instead</button>
+              Bank not showing?
+              <button class="text-pay-btn" onclick="buyCredits(500, this)">Pay by card instead</button>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="card">
+      <div class="card" data-product="750 credits premium pack">
         <div class="card-top">
           <img src="/logo.png" alt="MCALTS">
         </div>
@@ -224,16 +246,17 @@
           <h3>750 Credits</h3>
           <p>Premium pack for bigger orders.</p>
 
-          <div class="payment-buttons">
-            <button onclick="buyCreditsBank(750)">Pay</button>
+          <div class="product-actions">
+            <button onclick="buyCreditsBank(750, this)">Pay</button>
             <div class="fallback-text">
-              Bank not showing? <button class="text-pay-btn" onclick="buyCredits(750)">Pay by card instead</button>
+              Bank not showing?
+              <button class="text-pay-btn" onclick="buyCredits(750, this)">Pay by card instead</button>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="card">
+      <div class="card" data-product="1000 credits largest premium pack">
         <div class="card-top">
           <img src="/logo.png" alt="MCALTS">
         </div>
@@ -247,21 +270,27 @@
           <h3>1000 Credits</h3>
           <p>Largest pack with the best total amount.</p>
 
-          <div class="payment-buttons">
-            <button onclick="buyCreditsBank(1000)">Pay</button>
+          <div class="product-actions">
+            <button onclick="buyCreditsBank(1000, this)">Pay</button>
             <div class="fallback-text">
-              Bank not showing? <button class="text-pay-btn" onclick="buyCredits(1000)">Pay by card instead</button>
+              Bank not showing?
+              <button class="text-pay-btn" onclick="buyCredits(1000, this)">Pay by card instead</button>
             </div>
           </div>
         </div>
       </div>
 
     </div>
+
+    <div id="noResults" class="no-results">
+      No packs found.
+    </div>
   </section>
 
   <!-- HOW IT WORKS -->
   <section class="how-section" id="how">
     <div class="section-header simple">
+      <span class="section-kicker">Steps</span>
       <h2>How it works</h2>
       <p>Simple checkout, instant key, easy redeem.</p>
     </div>
@@ -290,6 +319,7 @@
   <!-- REVIEWS -->
   <section class="reviews-section" id="reviews">
     <div class="section-header simple">
+      <span class="section-kicker">Feedback</span>
       <h2>Reviews</h2>
       <p>What customers say about MCALTS.</p>
     </div>
@@ -318,6 +348,7 @@
   <!-- FAQ -->
   <section class="faq-section" id="faq">
     <div class="section-header simple">
+      <span class="section-kicker">Help</span>
       <h2>FAQ</h2>
       <p>Quick answers before you buy.</p>
     </div>
@@ -355,6 +386,8 @@
       <a href="https://discord.gg/PDJJK2byVP" target="_blank" rel="noopener noreferrer">Discord Support</a>
     </div>
   </footer>
+
+  <div id="toast" class="toast"></div>
 
   <script src="script.js"></script>
 </body>

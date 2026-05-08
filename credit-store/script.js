@@ -1,5 +1,37 @@
 const GBP_TO_USD = 1.25;
 
+function showToast(message) {
+  const toast = document.getElementById("toast");
+
+  if (!toast) {
+    alert(message);
+    return;
+  }
+
+  toast.innerText = message;
+  toast.style.display = "block";
+
+  clearTimeout(window.toastTimer);
+
+  window.toastTimer = setTimeout(() => {
+    toast.style.display = "none";
+  }, 2800);
+}
+
+function toggleMobileMenu() {
+  const menu = document.getElementById("mobileMenu");
+  if (!menu) return;
+
+  menu.classList.toggle("open");
+}
+
+function closeMobileMenu() {
+  const menu = document.getElementById("mobileMenu");
+  if (!menu) return;
+
+  menu.classList.remove("open");
+}
+
 function updateCurrency() {
   const currency = document.getElementById("currency")?.value || "GBP";
   const prices = document.querySelectorAll(".card-price");
@@ -19,28 +51,39 @@ function updateCurrency() {
 }
 
 function filterProducts() {
-  const input = document.getElementById("search")?.value.toLowerCase() || "";
+  const input = document.getElementById("search")?.value.toLowerCase().trim() || "";
   const cards = document.querySelectorAll(".card");
+  const noResults = document.getElementById("noResults");
+
+  let visibleCount = 0;
 
   cards.forEach(card => {
-    const text = card.innerText.toLowerCase();
-    card.style.display = text.includes(input) ? "" : "none";
-  });
-}
+    const text = `${card.innerText} ${card.dataset.product || ""}`.toLowerCase();
+    const isVisible = text.includes(input);
 
-function setButtonsLoading(amount, isLoading) {
-  const buttons = document.querySelectorAll(`button[onclick*="${amount}"]`);
+    card.style.display = isVisible ? "" : "none";
 
-  buttons.forEach(button => {
-    button.disabled = isLoading;
-
-    if (isLoading) {
-      button.dataset.oldText = button.innerText;
-      button.innerText = "Loading...";
-    } else {
-      button.innerText = button.dataset.oldText || button.innerText;
+    if (isVisible) {
+      visibleCount++;
     }
   });
+
+  if (noResults) {
+    noResults.style.display = visibleCount === 0 ? "block" : "none";
+  }
+}
+
+function setButtonLoading(button, isLoading) {
+  if (!button) return;
+
+  button.disabled = isLoading;
+
+  if (isLoading) {
+    button.dataset.oldText = button.innerText;
+    button.innerText = "Loading...";
+  } else {
+    button.innerText = button.dataset.oldText || button.innerText;
+  }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -52,10 +95,24 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   filterProducts();
+
+  document.addEventListener("click", event => {
+    const navbar = document.querySelector(".navbar");
+    const menu = document.getElementById("mobileMenu");
+
+    if (!menu || !navbar) return;
+
+    const clickedInsideMenu = menu.contains(event.target);
+    const clickedInsideNavbar = navbar.contains(event.target);
+
+    if (!clickedInsideMenu && !clickedInsideNavbar) {
+      menu.classList.remove("open");
+    }
+  });
 });
 
-async function buyCredits(amount) {
-  setButtonsLoading(amount, true);
+async function buyCredits(amount, button = null) {
+  setButtonLoading(button, true);
 
   try {
     const res = await fetch("/create-checkout", {
@@ -71,7 +128,7 @@ async function buyCredits(amount) {
     if (!res.ok) {
       const errorText = await res.text();
       console.error("Server response error:", errorText);
-      alert("Checkout failed: " + errorText);
+      showToast("Card checkout failed. Try again.");
       return;
     }
 
@@ -82,20 +139,20 @@ async function buyCredits(amount) {
     if (data.url) {
       window.location.href = data.url;
     } else {
-      alert("Error creating Stripe checkout session");
+      showToast("Error creating card checkout.");
       console.error(data);
     }
 
   } catch (err) {
     console.error("Fetch error:", err);
-    alert("Server error. Try again.");
+    showToast("Server error. Try again.");
   } finally {
-    setButtonsLoading(amount, false);
+    setButtonLoading(button, false);
   }
 }
 
-async function buyCreditsBank(amount) {
-  setButtonsLoading(amount, true);
+async function buyCreditsBank(amount, button = null) {
+  setButtonLoading(button, true);
 
   try {
     const res = await fetch("/create-gocardless-checkout", {
@@ -111,7 +168,7 @@ async function buyCreditsBank(amount) {
     if (!res.ok) {
       const errorText = await res.text();
       console.error("GoCardless response error:", errorText);
-      alert("Bank payment failed: " + errorText);
+      showToast("Bank payment failed. Try card instead.");
       return;
     }
 
@@ -122,14 +179,14 @@ async function buyCreditsBank(amount) {
     if (data.url) {
       window.location.href = data.url;
     } else {
-      alert("Error creating bank payment");
+      showToast("Error creating bank payment.");
       console.error(data);
     }
 
   } catch (err) {
     console.error("GoCardless fetch error:", err);
-    alert("Server error. Try again.");
+    showToast("Server error. Try again.");
   } finally {
-    setButtonsLoading(amount, false);
+    setButtonLoading(button, false);
   }
 }
